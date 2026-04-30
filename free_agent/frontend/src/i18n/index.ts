@@ -587,6 +587,212 @@ i18n.addTranslations('zh-CN', 'chat', {
   'suggestion.title': '建议',
 });
 
+i18n.addTranslations('ja', 'common', {
+  'app.name': 'FREE Agent',
+  'app.version': 'バージョン {{version}}',
+  'app.description': 'AI搭載デスクトップコーディングアシスタント',
+  
+  'nav.home': 'ホーム',
+  'nav.settings': '設定',
+  'nav.help': 'ヘルプ',
+  'nav.about': 'について',
+  
+  'button.save': '保存',
+  'button.cancel': 'キャンセル',
+  'button.delete': '削除',
+  'button.edit': '編集',
+  'button.add': '追加',
+  'button.close': '閉じる',
+  'button.confirm': '確認',
+  'button.retry': '再試行',
+  'button.loading': '読み込み中...',
+  
+  'error.general': 'エラーが発生しました',
+  'error.network': 'ネットワークエラー',
+  'error.notFound': '見つかりません',
+  'error.unauthorized': '未認証',
+  'error.serverError': 'サーバーエラー',
+  'error.validation': '検証エラー',
+  'error.timeout': 'リクエストタイムアウト',
+  
+  'status.online': 'オンライン',
+  'status.offline': 'オフライン',
+  'status.loading': '読み込み中...',
+  'status.saving': '保存中...',
+  'status.saved': '保存済み',
+  
+  'confirm.delete': '本当に削除しますか？',
+  'confirm.leave': '未保存の変更があります。本当に離れますか？',
+  
+  'placeholder.search': '検索...',
+  'placeholder.select': '選択...',
+  'placeholder.input': '入力してください...',
+});
+
+i18n.addTranslations('ja', 'settings', {
+  'title': '設定',
+  'general': '一般',
+  'appearance': '外観',
+  'api': 'API設定',
+  'shortcuts': 'キーボードショートカット',
+  'about': 'について',
+  
+  'language': '言語',
+  'theme': 'テーマ',
+  'theme.dark': 'ダーク',
+  'theme.light': 'ライト',
+  'theme.system': 'システム',
+  
+  'fontSize': 'フォントサイズ',
+  'fontFamily': 'フォント',
+  'codeTheme': 'コードテーマ',
+  
+  'apiProvider': 'APIプロバイダー',
+  'apiKey': 'APIキー',
+  'apiBaseUrl': 'ベースURL',
+  'apiModel': 'モデル',
+  'apiTemperature': ' температура',
+  'apiMaxTokens': '最大トークン数',
+  
+  'serverPort': 'サーバーポート',
+  'serverHost': 'サーバーアドレス',
+  
+  'llamaEnabled': 'ローカルモデルを有効化 (llama.cpp)',
+  'llamaPath': 'llama.cpp パス',
+  'llamaPort': 'llama.cpp ポート',
+  'llamaContextSize': 'コンテキストサイズ',
+  'llamaGpuLayers': 'GPUレイヤー数',
+  
+  'save.success': '設定を保存しました',
+  'save.error': '設定の保存に失敗しました',
+  'reset.confirm': 'すべての設定をリセットしますか？',
+});
+
+i18n.addTranslations('ja', 'chat', {
+  'title': 'チャット',
+  'placeholder': 'メッセージを入力...',
+  'send': '送信',
+  'clear': 'チャットをクリア',
+  
+  'role.user': 'あなた',
+  'role.assistant': 'アシスタント',
+  'role.system': 'システム',
+  
+  'streaming.start': '応答を生成中...',
+  'streaming.end': '応答完了',
+  
+  'error.send': 'メッセージの送信に失敗しました',
+  'error.stream': 'ストリームエラー',
+  
+  'history.empty': 'チャット履歴がありません',
+  'history.clear': 'すべての履歴をクリアしますか？',
+  
+  'suggestion.title': '提案',
+});
+
+i18n.addTranslations('ko', 'common', {
+  'app.name': 'FREE Agent',
+  'app.version': '버전 {{version}}',
+  'app.description': 'AI 기반 데스크톱 코딩 어시스턴트',
+  
+  'nav.home': '홈',
+  'nav.settings': '설정',
+  'nav.help': '도움말',
+  'nav.about': '정보',
+  
+  'button.save': '저장',
+  'button.cancel': '취소',
+  'button.delete': '삭제',
+  'button.edit': '편집',
+  'button.add': '추가',
+  'button.close': '닫기',
+  'button.confirm': '확인',
+  'button.retry': '다시 시도',
+  'button.loading': '로딩 중...',
+  
+  'error.general': '오류가 발생했습니다',
+  'error.network': '네트워크 오류',
+  'error.notFound': '찾을 수 없음',
+  'error.unauthorized': '인증되지 않음',
+  'error.serverError': '서버 오류',
+  'error.validation': '유효성 검사 오류',
+  'error.timeout': '요청 시간 초과',
+  
+  'status.online': '온라인',
+  'status.offline': '오프라인',
+  'status.loading': '로딩 중...',
+  'status.saving': '저장 중...',
+  'status.saved': '저장됨',
+  
+  'confirm.delete': '정말 삭제하시겠습니까?',
+  'confirm.leave': '저장되지 않은 변경 사항이 있습니다. 정말 나가시겠습니까?',
+  
+  'placeholder.search': '검색...',
+  'placeholder.select': '선택...',
+  'placeholder.input': '입력하세요...',
+});
+
+i18n.addTranslations('ko', 'settings', {
+  'title': '설정',
+  'general': '일반',
+  'appearance': '외관',
+  'api': 'API 설정',
+  'shortcuts': '키보드 단축키',
+  'about': '정보',
+  
+  'language': '언어',
+  'theme': '테마',
+  'theme.dark': '다크',
+  'theme.light': '라이트',
+  'theme.system': '시스템',
+  
+  'fontSize': '글꼴 크기',
+  'fontFamily': '글꼴',
+  'codeTheme': '코드 테마',
+  
+  'apiProvider': 'API 공급자',
+  'apiKey': 'API 키',
+  'apiBaseUrl': '기본 URL',
+  'apiModel': '모델',
+  'apiTemperature': '온도',
+  'apiMaxTokens': '최대 토큰 수',
+  
+  'serverPort': '서버 포트',
+  'serverHost': '서버 주소',
+  
+  'llamaEnabled': '로컬 모델 활성화 (llama.cpp)',
+  'llamaPath': 'llama.cpp 경로',
+  'llamaPort': 'llama.cpp 포트',
+  'llamaContextSize': '컨텍스트 크기',
+  'llamaGpuLayers': 'GPU 레이어 수',
+  
+  'save.success': '설정이 저장되었습니다',
+  'save.error': '설정 저장에 실패했습니다',
+  'reset.confirm': '모든 설정을 재설정하시겠습니까?',
+});
+
+i18n.addTranslations('ko', 'chat', {
+  'title': '채팅',
+  'placeholder': '메시지를 입력하세요...',
+  'send': '전송',
+  'clear': '채팅 지우기',
+  
+  'role.user': '나',
+  'role.assistant': '어시스턴트',
+  'role.system': '시스템',
+  
+  'streaming.start': '응답 생성 중...',
+  'streaming.end': '응답 완료',
+  
+  'error.send': '메시지 전송에 실패했습니다',
+  'error.stream': '스트림 오류',
+  
+  'history.empty': '채팅 기록이 없습니다',
+  'history.clear': '모든 기록을 지우시겠습니까?',
+  
+  'suggestion.title': '제안',
+});
+
 interface I18nContextValue {
   locale: Locale;
   t: (key: string, options?: TranslationOptions, namespace?: string) => string;
