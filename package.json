@@ -1,0 +1,13 @@
+{
+  "name": "free-agent",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "dev:full": "cd frontend && npm run dev",
+    "dev:browser": "cd frontend && npx concurrently --names \"API,UI\" --prefix-colors \"blue,green\" \"npm run dev:server\" \"npm run dev:renderer\"",
+    "dev:electron": "cd frontend && npm run electron:dev",
+    "build": "cd frontend && npm run build",
+    "build:app": "cd frontend && npm run electron:build"
+  }
+}

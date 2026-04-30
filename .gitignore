@@ -1,0 +1,85 @@
+# 依赖
+node_modules/
+target/
+
+# 构建产物
+dist/
+dist-electron/
+release/
+*.tsbuildinfo
+
+# 资源
+resources/server/*.exe
+resources/server/*.dll
+
+# 日志
+*.log
+logs/
+log*.txt
+
+# IDE
+.vscode/
+.idea/
+.trae/
+*.swp
+*.swo
+*.swn
+
+# AI 助手配置
+.claude.json
+.claude/
+.openclaw.json
+.openclaw/
+
+# 系统
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 数据库
+*.db
+data/
+
+# 证书与密钥
+*.pem
+*.key
+*.cert
+
+# 二进制文件
+*.exe
+*.dll
+
+# 测试覆盖率
+coverage/
+
+# 开发临时文件
+*.tmp
+*.bak
+*.cache
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# Electron
+out/
+
+# Rust
+**/target/
+
+# 模型文件（体积过大）
+*.gguf
+*.pkl
+*.h5
+*.safetensors
+
+# llama.cpp 二进制
+llama-b8352/
+
+# 构建发布目录
+build/
+
+# 临时调试文件
+*.cjs
+*.spec
