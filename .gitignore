@@ -1,18 +1,18 @@
-# 依赖
+﻿# 渚濊禆
 node_modules/
 target/
 
-# 构建产物
+# 鏋勫缓浜х墿
 dist/
 dist-electron/
 release/
 *.tsbuildinfo
 
-# 资源
+# 璧勬簮
 resources/server/*.exe
 resources/server/*.dll
 
-# 日志
+# 鏃ュ織
 *.log
 logs/
 log*.txt
@@ -25,39 +25,34 @@ log*.txt
 *.swo
 *.swn
 
-# AI 助手配置
+# AI 鍔╂墜閰嶇疆
 .claude.json
 .claude/
 .openclaw.json
 .openclaw/
 
-# 系统
+# 绯荤粺
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# 数据库
-*.db
+# 鏁版嵁搴?*.db
 data/
 
-# 证书与密钥
-*.pem
+# 璇佷功涓庡瘑閽?*.pem
 *.key
 *.cert
 
-# 二进制文件
-*.exe
+# 浜岃繘鍒舵枃浠?*.exe
 *.dll
 
-# 测试覆盖率
-coverage/
+# 娴嬭瘯瑕嗙洊鐜?coverage/
 
-# 开发临时文件
-*.tmp
+# 寮€鍙戜复鏃舵枃浠?*.tmp
 *.bak
 *.cache
 
-# 环境变量
+# 鐜鍙橀噺
 .env
 .env.local
 .env.*.local
@@ -68,18 +63,17 @@ out/
 # Rust
 **/target/
 
-# 模型文件（体积过大）
+# 妯″瀷鏂囦欢锛堜綋绉繃澶э級
 *.gguf
 *.pkl
 *.h5
 *.safetensors
 
-# llama.cpp 二进制
-llama-b8352/
+# llama.cpp 浜岃繘鍒?llama-b8352/
 
-# 构建发布目录
+# 鏋勫缓鍙戝竷鐩綍
 build/
 
-# 临时调试文件
+# 涓存椂璋冭瘯鏂囦欢
 *.cjs
 *.spec
