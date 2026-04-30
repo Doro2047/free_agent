@@ -1,344 +1,166 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import { retry, RateLimitError, NetworkError, AppError } from '../utils/errors';
-import { debounce } from '../utils/performance';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { toast } from 'sonner';
+import { apiCache } from '@/utils/apiCache';
 
-export interface ApiClientConfig {
-  baseURL: string;
-  timeout?: number;
-  retries?: number;
-  retryDelay?: number;
-  enableCache?: boolean;
-  cacheSize?: number;
-  cacheTTL?: number;
-  onRequest?: (config: InternalAxiosRequestConfig) => void;
-  onResponse?: (response: AxiosResponse) => void;
-  onError?: (error: AxiosError) => void;
-}
+class ApiClient {
+  private _instance: AxiosInstance;
+  public defaultRetries = 0;
 
-export interface RequestCache {
-  key: string;
-  data: unknown;
-  timestamp: number;
-  ttl: number;
-}
-
-export class ApiClient {
-  private client: AxiosInstance;
-  private cache: Map<string, RequestCache> = new Map();
-  private pendingRequests: Map<string, AbortController> = new Map();
-  private config: Required<ApiClientConfig>;
-
-  constructor(config: ApiClientConfig) {
-    this.config = {
-      baseURL: config.baseURL,
-      timeout: config.timeout || 30000,
-      retries: config.retries || 3,
-      retryDelay: config.retryDelay || 1000,
-      enableCache: config.enableCache ?? true,
-      cacheSize: config.cacheSize || 100,
-      cacheTTL: config.cacheTTL || 5 * 60 * 1000,
-      onRequest: config.onRequest || (() => {}),
-      onResponse: config.onResponse || (() => {}),
-      onError: config.onError || (() => {}),
-    };
-
-    this.client = axios.create({
-      baseURL: this.config.baseURL,
-      timeout: this.config.timeout,
-      headers: {
-        'Content-Type': 'application/json',
-      },
+  constructor(config: AxiosRequestConfig = {}) {
+    this._instance = axios.create({
+      baseURL: (import.meta as any).env?.VITE_SERVER_URL || 'http://localhost:3000/api',
+      timeout: 30000,
+      headers: { 'Content-Type': 'application/json' },
+      ...config,
     });
 
     this.setupInterceptors();
-    this.startCacheCleanup();
   }
 
-  private setupInterceptors(): void {
-    this.client.interceptors.request.use(
+  get instance(): AxiosInstance {
+    return this._instance;
+  }
+
+  private setupInterceptors() {
+    this._instance.interceptors.request.use(
       (config) => {
-        this.config.onRequest(config);
+        config.headers['X-Request-ID'] = crypto.randomUUID();
         return config;
       },
-      (error) => {
-        return Promise.reject(this.transformError(error));
-      }
+      (error) => Promise.reject(error)
     );
 
-    this.client.interceptors.response.use(
-      (response) => {
-        this.config.onResponse(response);
-        return response;
-      },
-      (error) => {
-        this.config.onError(error);
-        return Promise.reject(this.transformError(error));
+    this._instance.interceptors.response.use(
+      (response: AxiosResponse) => response.data,
+      async (error: AxiosError<ApiErrorData>) => {
+        const status = error.response?.status;
+        const data = error.response?.data;
+        const message = data?.error || error.message || '请求失败';
+
+        if (status === 401) {
+          toast.error('认证失效，请检查 API Key 配置');
+        } else if (status === 403) {
+          toast.error('权限不足');
+        } else if (status === 404) {
+          toast.error('请求的资源不存在');
+        } else if (status === 429) {
+          toast.warning('请求过于频繁，请稍后重试');
+        } else if (status === 500) {
+          toast.error('服务器内部错误');
+        } else if (status === 502 || status === 503) {
+          toast.error('服务暂时不可用，请检查后端是否运行');
+        } else if (status === undefined) {
+          toast.error('无法连接到服务器，请检查网络或后端服务');
+        } else {
+          toast.error(message);
+        }
+
+        return Promise.reject(new ApiClientError(message, status, data));
       }
     );
   }
 
-  private transformError(error: AxiosError): AppError {
-    if (error.response) {
-      const { status, data } = error.response;
-      
-      switch (status) {
-        case 401:
-          return new AppError('未授权，请检查 API Key', 'UNAUTHORIZED', status);
-        case 403:
-          return new AppError('禁止访问', 'FORBIDDEN', status);
-        case 404:
-          return new AppError('资源不存在', 'NOT_FOUND', status);
-        case 429:
-          return new RateLimitError();
-        case 500:
-          return new AppError('服务器内部错误', 'SERVER_ERROR', status);
-        default:
-          return new AppError(
-            (data as { message?: string })?.message || '请求失败',
-            'REQUEST_FAILED',
-            status
-          );
-      }
-    } else if (error.request) {
-      return new NetworkError('网络连接失败');
-    } else {
-      return new AppError(error.message || '请求配置错误', 'CONFIG_ERROR');
-    }
+  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    const cacheKey = config?.params ? `${url}` : url
+    const cached = apiCache.get<T>(cacheKey, config?.params as Record<string, unknown>)
+    if (cached !== null) return cached
+
+    const result = await this._instance.get<T, T>(url, config)
+    apiCache.set(cacheKey, result, config?.params as Record<string, unknown>)
+    return result
   }
 
-  private generateCacheKey(config: AxiosRequestConfig): string {
-    return JSON.stringify({
-      url: config.url,
-      method: config.method,
-      params: config.params,
-      data: config.data,
-    });
+  async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    apiCache.invalidatePattern(url)
+    return this._instance.post<T, T>(url, data, config);
   }
 
-  private getCachedResponse<T>(key: string): T | null {
-    if (!this.config.enableCache) return null;
-
-    const cached = this.cache.get(key);
-    if (!cached) return null;
-
-    const isExpired = Date.now() - cached.timestamp > cached.ttl;
-    if (isExpired) {
-      this.cache.delete(key);
-      return null;
-    }
-
-    return cached.data as T;
+  async put<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    apiCache.invalidatePattern(url)
+    return this._instance.put<T, T>(url, data, config);
   }
 
-  private setCachedResponse(key: string, data: unknown): void {
-    if (!this.config.enableCache) return;
-
-    if (this.cache.size >= this.config.cacheSize) {
-      const oldestKey = this.cache.keys().next().value;
-      if (oldestKey) this.cache.delete(oldestKey);
-    }
-
-    this.cache.set(key, {
-      key,
-      data,
-      timestamp: Date.now(),
-      ttl: this.config.cacheTTL,
-    });
+  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+    apiCache.invalidatePattern(url)
+    return this._instance.delete<T, T>(url, config);
   }
 
-  private startCacheCleanup(): void {
-    if (typeof window === 'undefined') return;
-
-    const cleanup = debounce(() => {
-      const now = Date.now();
-      for (const [key, value] of this.cache.entries()) {
-        if (now - value.timestamp > value.ttl) {
-          this.cache.delete(key);
-        }
-      }
-    }, 60000);
-
-    window.addEventListener('focus', cleanup);
+  async patch<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
+    apiCache.invalidatePattern(url)
+    return this._instance.patch<T, T>(url, data, config);
   }
 
-  private async executeWithRetry<T>(
-    requestFn: () => Promise<AxiosResponse<T>>,
-    retries: number = this.config.retries
-  ): Promise<T> {
-    let lastError: Error | null = null;
-
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      try {
-        const response = await requestFn();
-        return response.data;
-      } catch (error) {
-        lastError = error as Error;
-
-        if (error instanceof RateLimitError && attempt < retries) {
-          const delay = this.config.retryDelay * Math.pow(2, attempt);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-
-        if (attempt < retries && this.isRetryableError(error)) {
-          const delay = this.config.retryDelay * Math.pow(2, attempt);
-          await new Promise((resolve) => setTimeout(resolve, delay));
-          continue;
-        }
-
-        throw error;
-      }
-    }
-
-    throw lastError || new AppError('重试次数耗尽', 'RETRY_EXHAUSTED');
-  }
-
-  private isRetryableError(error: unknown): boolean {
-    if (error instanceof AxiosError) {
-      return !error.response || error.response.status >= 500;
-    }
-    return false;
-  }
-
-  async get<T>(
-    url: string,
-    config?: AxiosRequestConfig,
-    options?: { useCache?: boolean; retries?: number }
-  ): Promise<T> {
-    const cacheKey = this.generateCacheKey({ url, method: 'get', ...config });
-    
-    if (options?.useCache !== false) {
-      const cached = this.getCachedResponse<T>(cacheKey);
-      if (cached) return cached;
-    }
-
-    const requestFn = () => this.client.get<T>(url, config);
-    const data = await this.executeWithRetry(requestFn, options?.retries);
-
-    if (options?.useCache !== false) {
-      this.setCachedResponse(cacheKey, data);
-    }
-
-    return data;
-  }
-
-  async post<T>(
-    url: string,
-    data?: unknown,
-    config?: AxiosRequestConfig,
-    options?: { retries?: number }
-  ): Promise<T> {
-    const requestFn = () => this.client.post<T>(url, data, config);
-    return this.executeWithRetry(requestFn, options?.retries);
-  }
-
-  async put<T>(
-    url: string,
-    data?: unknown,
-    config?: AxiosRequestConfig,
-    options?: { retries?: number }
-  ): Promise<T> {
-    const requestFn = () => this.client.put<T>(url, data, config);
-    return this.executeWithRetry(requestFn, options?.retries);
-  }
-
-  async patch<T>(
-    url: string,
-    data?: unknown,
-    config?: AxiosRequestConfig,
-    options?: { retries?: number }
-  ): Promise<T> {
-    const requestFn = () => this.client.patch<T>(url, data, config);
-    return this.executeWithRetry(requestFn, options?.retries);
-  }
-
-  async delete<T>(
-    url: string,
-    config?: AxiosRequestConfig,
-    options?: { retries?: number }
-  ): Promise<T> {
-    const requestFn = () => this.client.delete<T>(url, config);
-    return this.executeWithRetry(requestFn, options?.retries);
-  }
-
-  createCancellableRequest<T>(
-    requestKey: string,
-    requestFn: () => Promise<AxiosResponse<T>>
-  ): { promise: Promise<T>; cancel: () => void } {
-    const controller = new AbortController();
-    this.pendingRequests.set(requestKey, controller);
-
-    const promise = requestFn().finally(() => {
-      this.pendingRequests.delete(requestKey);
+  async stream(url: string, data?: unknown): Promise<ReadableStream<Uint8Array>> {
+    const response = await fetch(`${this._instance.defaults.baseURL}${url}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data || {}),
     });
 
-    const cancel = () => {
-      const existing = this.pendingRequests.get(requestKey);
-      if (existing) {
-        existing.abort();
-        this.pendingRequests.delete(requestKey);
-      }
-    };
-
-    return { promise, cancel };
-  }
-
-  cancelAllRequests(): void {
-    for (const controller of this.pendingRequests.values()) {
-      controller.abort();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null);
+      throw new ApiClientError(
+        errorData?.error || `流式请求失败: ${response.status}`,
+        response.status
+      );
     }
-    this.pendingRequests.clear();
+
+    if (!response.body) {
+      throw new ApiClientError('流式响应不可用');
+    }
+
+    return response.body;
   }
 
-  cancelRequest(requestKey: string): void {
-    const controller = this.pendingRequests.get(requestKey);
-    if (controller) {
-      controller.abort();
-      this.pendingRequests.delete(requestKey);
+  private async retryWithBackoff<T>(
+    fn: () => Promise<T>,
+    retries: number,
+    delayMs: number = 1000,
+  ): Promise<T> {
+    try {
+      return await fn();
+    } catch (error) {
+      if (retries <= 0) throw error;
+      const status = (error as any)?.status;
+      // 仅对 5xx 服务器错误和网络错误重试，4xx 错误不重试
+      if (status && status >= 400 && status < 500) throw error;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      return this.retryWithBackoff(fn, retries - 1, delayMs * 2);
     }
   }
 
-  setAuthToken(token: string): void {
-    this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  async getWithRetry<T>(url: string, config?: AxiosRequestConfig, retries?: number): Promise<T> {
+    const maxRetries = retries ?? this.defaultRetries;
+    return this.retryWithBackoff(() => this.get<T>(url, config), maxRetries);
   }
 
-  removeAuthToken(): void {
-    delete this.client.defaults.headers.common['Authorization'];
+  setRetries(retries: number) {
+    this.defaultRetries = retries;
   }
 
-  setHeader(key: string, value: string): void {
-    this.client.defaults.headers.common[key] = value;
-  }
-
-  removeHeader(key: string): void {
-    delete this.client.defaults.headers.common[key];
-  }
-
-  clearCache(): void {
-    this.cache.clear();
-  }
-
-  getCacheStats(): { size: number; keys: string[] } {
-    return {
-      size: this.cache.size,
-      keys: Array.from(this.cache.keys()),
-    };
-  }
-
-  getClient(): AxiosInstance {
-    return this.client;
-  }
-
-  updateConfig(config: Partial<ApiClientConfig>): void {
-    Object.assign(this.config, config);
-    
-    if (config.baseURL) {
-      this.client.defaults.baseURL = config.baseURL;
-    }
-    if (config.timeout) {
-      this.client.defaults.timeout = config.timeout;
-    }
+  clearCache() {
+    apiCache.clear()
   }
 }
 
-export const createApiClient = (config: ApiClientConfig) => new ApiClient(config);
+class ApiClientError extends Error {
+  status?: number;
+  data?: ApiErrorData;
+
+  constructor(message: string, status?: number, data?: ApiErrorData) {
+    super(message);
+    this.name = 'ApiClientError';
+    this.status = status;
+    this.data = data;
+  }
+}
+
+interface ApiErrorData {
+  error?: string;
+  message?: string;
+  [key: string]: unknown;
+}
+
+export const apiClient = new ApiClient();
+export { ApiClientError };
+export type { ApiErrorData };
