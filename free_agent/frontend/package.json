@@ -21,15 +21,30 @@
     "electron:dev": "concurrently \"npm run dev:renderer\" \"wait-on http://localhost:5173 && electron .\"",
     "electron:build": "tsc -b && vite build && electron-builder",
     "typecheck": "tsc --noEmit",
+    "typecheck:watch": "tsc --noEmit --watch",
     "lint": "eslint . --ext .ts,.tsx,.js,.jsx",
     "lint:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix",
+    "lint:staged": "lint-staged",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
-    "postinstall": "electron-builder install-app-deps"
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:all": "npm run test && npm run test:e2e",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
+    "clean": "rimraf dist dist-electron node_modules/.vite",
+    "clean:all": "rimraf dist dist-electron node_modules",
+    "rebuild": "electron-builder install-app-deps",
+    "postinstall": "electron-builder install-app-deps",
+    "preinstall": "npx only-allow npm",
+    "prepare": "husky install",
+    "update": "npm-check-updates -u",
+    "analyze": "vite build --mode analyze && npx vite-bundle-visualizer"
   },
   "dependencies": {
     "axios": "^1.8.4",
@@ -45,7 +60,10 @@
     "remark-gfm": "^4.0.0",
     "sonner": "^2.0.3",
     "tailwind-merge": "^2.4.0",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "immer": "^10.0.3",
+    "immer-react": "^0.0.1",
+    "zundo": "^2.2.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.7.0",
@@ -58,6 +76,8 @@
     "@types/react-dom": "^18.3.0",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@vitejs/plugin-react": "^4.3.1",
+    "@vitest/coverage-v8": "^2.0.0",
+    "@vitest/ui": "^2.0.0",
     "autoprefixer": "^10.4.19",
     "concurrently": "^9.0.0",
     "electron": "^35.1.2",
@@ -67,19 +87,42 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.5.0",
     "happy-dom": "^20.9.0",
+    "husky": "^9.0.0",
     "jsdom": "^29.0.2",
+    "lint-staged": "^15.2.0",
+    "npm-check-updates": "^16.14.0",
+    "only-allow": "^1.2.1",
     "postcss": "^8.4.39",
     "prettier": "^3.2.0",
+    "prettier-plugin-tailwindcss": "^0.5.0",
+    "rimraf": "^6.0.0",
     "tailwindcss": "^3.4.6",
     "terser": "^5.39.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.0",
     "vite": "^5.4.0",
+    "vite-bundle-visualizer": "^1.0.0",
+    "vite-plugin-compression": "^0.5.1",
+    "vite-plugin-svgr": "^4.2.0",
     "vitest": "^4.1.5",
     "wait-on": "^8.0.0"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
