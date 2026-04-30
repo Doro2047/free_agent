@@ -82,6 +82,10 @@ jobs:
         working-directory: frontend
         run: npm run test -- --run
 
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
   rust-test:
     name: Rust Test
     runs-on: ubuntu-latest
@@ -103,6 +107,33 @@ jobs:
         working-directory: claw-code/rust
         run: cargo test --workspace --all-features -- --nocapture
 
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: npm audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Cargo audit
+        working-directory: claw-code/rust
+        run: cargo install cargo-audit && cargo audit --deny warnings
+
   build-release:
     name: Build Release
     runs-on: ${{ matrix.os }}
@@ -121,60 +152,17 @@ jobs:
         run: cargo build --release -p server
 
       - name: Setup Node.js
-        if: matrix.os == 'ubuntu-latest'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Build Frontend
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-${{ matrix.os }}
-          path: |
-            claw-code/rust/target/release/server.exe
-            claw-code/rust/target/release/server
-          if-no-files-found: error
-
-  windows-build:
-    name: Windows Build
-    runs-on: windows-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-action@stable
-
-      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
-      - name: Build Rust Server
-        working-directory: claw-code/rust
-        shell: bash
-        run: cargo build --release -p server
-
-      - name: Copy Rust binary
-        shell: bash
-        run: |
-          mkdir -p frontend/resources/server
-          cp claw-code/rust/target/release/server.exe frontend/resources/server/ 2>/dev/null || true
-
       - name: Install deps
         working-directory: frontend
         run: npm ci
 
-      - name: Build
+      - name: Build Frontend
         working-directory: frontend
         run: npm run build
 
@@ -182,11 +170,12 @@ jobs:
         working-directory: frontend
         run: npm run electron:build
 
-      - name: Upload installer
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: windows-installer
-          path: frontend/release/**/*.exe
+          name: build-${{ matrix.os }}
+          path: |
+            frontend/release/**/*
           if-no-files-found: warn
 
   lint-changed:

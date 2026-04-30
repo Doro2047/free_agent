@@ -8,13 +8,12 @@ import { startLlamaServer, stopLlamaServer, registerLlamaIPC } from './llama-man
 import { createMainWindow, setupAppLifecycle } from './window-manager';
 import electronUpdater from 'electron-updater';
 import electronLog from 'electron-log';
-const log: any = electronLog;
+import { createSecureHandler } from './security-ipc';
 
+const log: any = electronLog;
 const { autoUpdater } = electronUpdater;
 type UpdateInfo = electronUpdater.UpdateInfo;
 type ProgressInfo = electronUpdater.ProgressInfo;
-
-// ==================== HTTP 代理配置 ====================
 
 let proxyServer: http.Server | null = null;
 const PROXY_PORT = 3001;
@@ -59,28 +58,21 @@ function stopApiProxy(): void {
   }
 }
 
-// ==================== 自动更新配置 ====================
-
 autoUpdater.logger = log;
 log.transports.file.level = 'info';
 
-// 从环境变量读取更新源配置，避免硬编码占位符
 const updateOwner = process.env.ELECTRON_UPDATER_OWNER || 'your-username';
 const updateRepo = process.env.ELECTRON_UPDATER_REPO || 'free-agent';
 
-// 配置更新服务器（可以替换为自定义更新服务器或 GitHub releases）
 autoUpdater.setFeedURL({
   provider: 'github',
   owner: updateOwner,
   repo: updateRepo,
-  // private: false, // 如果是私有仓库，设置为 true 并配置 token
 });
 
-// 不在应用启动时自动检查更新，由用户手动触发或定时触发
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
-// 监听更新事件
 autoUpdater.on('checking-for-update', () => {
   log.info('正在检查更新...');
   sendUpdateToRenderer('checking-for-update', { message: '正在检查更新...' });
@@ -120,7 +112,6 @@ autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
     releaseNotes: info.releaseNotes,
   });
 
-  // 弹窗提示用户是否立即安装
   const mainWindow = getMainWindow();
   if (mainWindow) {
     dialog.showMessageBox(mainWindow, {
@@ -133,7 +124,6 @@ autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
       cancelId: 1,
     }).then((result) => {
       if (result.response === 0) {
-        // 用户选择立即安装，重启应用
         setImmediate(() => autoUpdater.quitAndInstall());
       }
     });
@@ -147,7 +137,6 @@ autoUpdater.on('error', (error: Error) => {
   });
 });
 
-// 发送更新状态到渲染进程
 function sendUpdateToRenderer(type: string, data: Record<string, unknown>): void {
   const mainWindow = getMainWindow();
   if (mainWindow) {
@@ -155,10 +144,8 @@ function sendUpdateToRenderer(type: string, data: Record<string, unknown>): void
   }
 }
 
-// 注册更新相关的 IPC 处理器
 function registerUpdateIPC(): void {
-  // 手动检查更新
-  ipcMain.handle('update:check', async () => {
+  createSecureHandler('update:check', async () => {
     try {
       await autoUpdater.checkForUpdates();
       return { success: true };
@@ -169,8 +156,7 @@ function registerUpdateIPC(): void {
     }
   });
 
-  // 下载更新（如果自动下载已禁用）
-  ipcMain.handle('update:download', async () => {
+  createSecureHandler('update:download', async () => {
     try {
       await autoUpdater.downloadUpdate();
       return { success: true };
@@ -180,19 +166,15 @@ function registerUpdateIPC(): void {
     }
   });
 
-  // 立即安装并重启
-  ipcMain.handle('update:install', () => {
+  createSecureHandler('update:install', () => {
     setImmediate(() => autoUpdater.quitAndInstall());
     return { success: true };
   });
 
-  // 获取当前版本
-  ipcMain.handle('update:version', () => {
+  createSecureHandler('update:version', () => {
     return app.getVersion();
   });
 }
-
-// ==================== 窗口配置持久化 ====================
 
 const getConfigPath = (): string => {
   const userDataPath = app.getPath('userData');
@@ -212,11 +194,8 @@ const loadWindowConfig = (): { x?: number; y?: number; width?: number; height?: 
   return {};
 };
 
-// 节流配置：限制窗口事件触发频率
 let lastWindowEventTime = 0;
 const WINDOW_EVENT_THROTTLE_MS = 200;
-
-// 防抖配置：避免频繁的窗口事件触发导致重复写入
 let saveWindowConfigTimer: ReturnType<typeof setTimeout> | null = null;
 
 const saveWindowConfig = (config: { x: number; y: number; width: number; height: number }): void => {
@@ -234,19 +213,14 @@ const saveWindowConfig = (config: { x: number; y: number; width: number; height:
     } catch (error) {
       console.error('Failed to save window config:', error);
     }
-  }, 300); // 300ms 防抖延迟
+  }, 300);
 };
-
-// ==================== 主窗口实例 ====================
 
 let mainWindow: BrowserWindow | null = null;
 
-// 获取主窗口实例
 function getMainWindow(): BrowserWindow | null {
   return mainWindow;
 }
-
-// ==================== llama-server 健康检查辅助函数 ====================
 
 function checkLlamaHealth(port: number = 8080): Promise<boolean> {
   return new Promise((resolve) => {
@@ -261,7 +235,6 @@ function checkLlamaHealth(port: number = 8080): Promise<boolean> {
   });
 }
 
-// 动态等待 llama-server 就绪，替代固定延迟
 async function waitForLlamaServer(maxWaitMs: number = 15000, pollIntervalMs: number = 500): Promise<boolean> {
   const llamaPort = parseInt(process.env.LLAMA_CPP_PORT || '8080', 10);
   const startTime = Date.now();
@@ -279,13 +252,9 @@ async function waitForLlamaServer(maxWaitMs: number = 15000, pollIntervalMs: num
   return false;
 }
 
-// ==================== 应用启动 ====================
-
 app.whenReady().then(async () => {
-  // 启动 API 代理服务器（生产模式下转发 /api 请求）
   setupApiProxy();
 
-  // 配置网络请求拦截：将 /api 请求转发到本地代理
   session.defaultSession.webRequest.onBeforeRequest(
     { urls: ['file://*/api/*'] },
     (details, callback) => {
@@ -294,7 +263,6 @@ app.whenReady().then(async () => {
     }
   );
 
-  // 允许跨域请求到本地代理
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
     const headers = { ...details.responseHeaders };
     if (details.url.includes(`127.0.0.1:${PROXY_PORT}`)) {
@@ -305,7 +273,6 @@ app.whenReady().then(async () => {
     callback({ responseHeaders: headers });
   });
 
-  // 创建主窗口
   const savedConfig = loadWindowConfig();
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
@@ -317,7 +284,6 @@ app.whenReady().then(async () => {
   let x = savedConfig.x;
   let y = savedConfig.y;
 
-  // 验证窗口位置是否在屏幕范围内
   if (x === undefined || y === undefined || x < 0 || y < 0 || x + width > screenWidth || y + height > screenHeight) {
     x = Math.floor((screenWidth - width) / 2);
     y = Math.floor((screenHeight - height) / 2);
@@ -330,7 +296,6 @@ app.whenReady().then(async () => {
     minHeight: 600,
   });
 
-  // 保留窗口事件监听以兼容旧逻辑
   mainWindow.on('resize', () => {
     const now = Date.now();
     if (now - lastWindowEventTime < WINDOW_EVENT_THROTTLE_MS) return;
@@ -353,45 +318,29 @@ app.whenReady().then(async () => {
     }
   });
 
-  // 设置应用生命周期（托盘、菜单等）
   setupAppLifecycle(mainWindow, async () => {
-    // 退出前停止服务器和 llama-server
     await stopServer();
     await stopLlamaServer();
-    // 停止 API 代理
     stopApiProxy();
   });
 
-  // 注册服务器 IPC 处理器
   registerServerIPC();
-
-  // 注册 llama-server IPC 处理器
   registerLlamaIPC();
-
-  // 注册窗口控制 IPC
   registerWindowIPC();
-
-  // 注册自动更新 IPC
   registerUpdateIPC();
 
-  // 延迟启动服务器，让窗口先渲染
   setTimeout(() => {
-    // 先启动 llama-server（本地模型）
     startLlamaServer(mainWindow);
   }, 500);
 
-  // 使用动态健康检查等待 llama-server 就绪，替代固定 5 秒延迟
   setTimeout(async () => {
     await waitForLlamaServer(15000, 500);
     startServer(mainWindow);
-  }, 500);  // 给 llama-server 500ms 启动时间后开始轮询健康检查
+  }, 500);
 });
 
-// ==================== 窗口控制 IPC ====================
-
 function registerWindowIPC(): void {
-  // 平台信息
-  ipcMain.handle('get-platform', () => {
+  createSecureHandler('get-platform', () => {
     return {
       platform: process.platform,
       arch: process.arch,
@@ -400,12 +349,11 @@ function registerWindowIPC(): void {
     };
   });
 
-  // 窗口控制
-  ipcMain.handle('window-minimize', () => {
+  createSecureHandler('window-minimize', () => {
     mainWindow?.minimize();
   });
 
-  ipcMain.handle('window-maximize', () => {
+  createSecureHandler('window-maximize', () => {
     if (mainWindow?.isMaximized()) {
       mainWindow.unmaximize();
     } else {
@@ -413,16 +361,15 @@ function registerWindowIPC(): void {
     }
   });
 
-  ipcMain.handle('window-close', () => {
+  createSecureHandler('window-close', () => {
     app.quit();
   });
 
-  ipcMain.handle('window-is-maximized', () => {
+  createSecureHandler('window-is-maximized', () => {
     return mainWindow?.isMaximized() ?? false;
   });
 
-  // 文件对话框
-  ipcMain.handle('dialog:openDirectory', async () => {
+  createSecureHandler('dialog:openDirectory', async () => {
     const { dialog } = await import('electron');
     const result = await dialog.showOpenDialog(mainWindow!, {
       properties: ['openDirectory'],
@@ -430,7 +377,7 @@ function registerWindowIPC(): void {
     return result.filePaths[0] || null;
   });
 
-  ipcMain.handle('dialog:openFile', async (_event, options?: Electron.OpenDialogOptions) => {
+  createSecureHandler('dialog:openFile', async (_event, options?: Electron.OpenDialogOptions) => {
     const { dialog } = await import('electron');
     const result = await dialog.showOpenDialog(mainWindow!, options || {
       properties: ['openFile'],

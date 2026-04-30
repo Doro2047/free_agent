@@ -1,35 +1,104 @@
-name: Auto Update
+name: Release
 
 on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
+        type: string
 
 jobs:
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Build Rust Server
+        working-directory: claw-code/rust
+        run: cargo build --release -p server
+
+      - name: Copy Rust binary
+        shell: bash
+        run: |
+          mkdir -p frontend/resources/server
+          cp claw-code/rust/target/release/server.exe frontend/resources/server/ 2>/dev/null || true
+          cp claw-code/rust/target/release/server frontend/resources/server/ 2>/dev/null || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install deps
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build Frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Build Electron
+        working-directory: frontend
+        run: npm run electron:build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installer-${{ matrix.os }}
+          path: frontend/release/**/*
+          if-no-files-found: error
+
+  publish:
+    name: Publish Release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
       - name: Get version
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
         shell: bash
+        if: github.event_name == 'release'
 
-      - name: Create Release
+      - name: Set version from input
+        id: input-version
+        run: echo "VERSION=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        shell: bash
+        if: github.event_name == 'workflow_dispatch'
+
+      - name: Upload to Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: CHANGELOG.md
-          draft: true
+          files: |
+            artifacts/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   notify:
     name: Notify Release
     runs-on: ubuntu-latest
-    needs: release
+    needs: publish
     steps:
       - name: Create issue
         uses: actions/github-script@v7
@@ -38,7 +107,7 @@ jobs:
             github.rest.issues.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Release ${process.env.TAG_NAME} deployed`,
+              title: `Release ${process.env.TAG_NAME || 'manual'} deployed`,
               body: 'New version has been released!',
               labels: ['release']
             })

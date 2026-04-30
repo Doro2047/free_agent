@@ -288,5 +288,10 @@ export function registerServerIPC(): void {
     try { return fs.readFileSync(state.logPath, 'utf-8') } catch (e) { console.error('读取服务器日志失败:', e); return '' }
   })
 
-  ipcMain.handle('server:check-port', async (_event, port: number) => await isPortAvailable(port))
+  ipcMain.handle('server:check-port', async (_event, port: number) => {
+    if (typeof port !== 'number' || port < 1 || port > 65535) {
+      throw new Error('无效的端口号')
+    }
+    return await isPortAvailable(port)
+  })
 }
