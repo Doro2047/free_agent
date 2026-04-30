@@ -1,0 +1,29 @@
+# Dependabot
+
+version: 2
+enable-orphan-grouping: true
+
+updates:
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "javascript"
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  - package-ecosystem: "cargo"
+    directory: "/claw-code/rust"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 10
+    labels:
+      - "rust"
+      - "dependencies"
+    commit-message:
+      prefix: "chore"
+      include: "scope"

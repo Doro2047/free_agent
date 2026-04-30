@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - VITE_SERVER_URL=http://localhost:3000/api
+    volumes:
+      - ./frontend:/app/frontend
+      - ./claw-code:/app/claw-code
+    ports:
+      - "5173:5173"
+      - "3000:3000"
+    command: bash scripts/dev.sh
+
+  rust:
+    build:
+      context: ./claw-code/rust
+      dockerfile: ../Dockerfile.rust
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - ./claw-code/rust:/app
+      - rust-cargo:/usr/local/cargo/registry
+    ports:
+      - "3000:3000"
+
+volumes:
+  rust-cargo:

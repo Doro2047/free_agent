@@ -1,0 +1,37 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "labels": ["dependencies"],
+  "commitMessagePrefix": "chore(deps)",
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["*"],
+      "groupName": "all dependencies",
+      "groupSlug": "all"
+    },
+    {
+      "matchPackagePatterns": ["electron"],
+      "groupName": "electron",
+      "automerge": false
+    },
+    {
+      "matchPackagePatterns": ["react", "react-dom"],
+      "groupName": "react",
+      "automerge": true
+    },
+    {
+      "matchManagers": ["cargo"],
+      "labels": ["rust", "dependencies"]
+    },
+    {
+      "matchManagers": ["npm"],
+      "labels": ["javascript", "dependencies"]
+    }
+  ],
+  "schedule": ["every weekend"],
+  "automerge": true,
+  "automergeType": "pr",
+  "platformAutomerge": true
+}
