@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+User-agent: *
+Disallow: /api/
+Disallow: /settings/
+Disallow: /admin/
+Disallow: /*.json$
+Disallow: /*.xml$
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://free-agent.app/sitemap.xml
