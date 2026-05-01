@@ -1,79 +1,44 @@
-﻿# 渚濊禆
 node_modules/
-target/
-
-# 鏋勫缓浜х墿
 dist/
 dist-electron/
 release/
-*.tsbuildinfo
-
-# 璧勬簮
-resources/server/*.exe
-resources/server/*.dll
-
-# 鏃ュ織
 *.log
-logs/
-log*.txt
-
-# IDE
-.vscode/
-.idea/
-.trae/
-*.swp
-*.swo
-*.swn
-
-# AI 鍔╂墜閰嶇疆
-.claude.json
-.claude/
-.openclaw.json
-.openclaw/
-
-# 绯荤粺
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# 鏁版嵁搴?*.db
-data/
-
-# 璇佷功涓庡瘑閽?*.pem
-*.key
-*.cert
-
-# 浜岃繘鍒舵枃浠?*.exe
-*.dll
-
-# 娴嬭瘯瑕嗙洊鐜?coverage/
-
-# 寮€鍙戜复鏃舵枃浠?*.tmp
-*.bak
-*.cache
-
-# 鐜鍙橀噺
 .env
 .env.local
-.env.*.local
+.env.production
 
-# Electron
-out/
+claw-code/rust/target/
+*.exe
+*.dll
+*.so
+*.dylib
 
-# Rust
-**/target/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
 
-# 妯″瀷鏂囦欢锛堜綋绉繃澶э級
-*.gguf
-*.pkl
-*.h5
-*.safetensors
+.vscode/.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/workspace.code-workspace
 
-# llama.cpp 浜岃繘鍒?llama-b8352/
+.idea/
+*.iml
 
-# 鏋勫缓鍙戝竷鐩綍
-build/
+coverage/
+*.lcov
+.nyc_output/
 
-# 涓存椂璋冭瘯鏂囦欢
-*.cjs
-*.spec
+*.pdb
+*.exp
+
+frontend/resources/server/
+!frontend/resources/server/.gitkeep
+
+*.zip
+*.tar.gz
+*.rar
