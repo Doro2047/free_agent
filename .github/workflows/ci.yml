@@ -26,30 +26,30 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('../claw-code/rust/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('claw-code/rust/**/Cargo.lock') }}
 
       - name: Cache cargo index
         uses: actions/cache@v4
         with:
           path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('../claw-code/rust/**/Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('claw-code/rust/**/Cargo.lock') }}
 
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
-          path: ../claw-code/rust/target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('../claw-code/rust/**/Cargo.lock') }}
+          path: claw-code/rust/target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('claw-code/rust/**/Cargo.lock') }}
 
       - name: Check formatting
-        working-directory: ../claw-code/rust
+        working-directory: claw-code/rust
         run: cargo fmt --check
 
       - name: Clippy
-        working-directory: ../claw-code/rust
+        working-directory: claw-code/rust
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Check
-        working-directory: ../claw-code/rust
+        working-directory: claw-code/rust
         run: cargo check --workspace
 
   frontend-check:
@@ -100,11 +100,11 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
-          path: ../claw-code/rust/target
-          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('../claw-code/rust/**/Cargo.lock') }}
+          path: claw-code/rust/target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('claw-code/rust/**/Cargo.lock') }}
 
       - name: Test
-        working-directory: ../claw-code/rust
+        working-directory: claw-code/rust
         run: cargo test --workspace --all-features -- --nocapture
 
   security-scan:
@@ -131,7 +131,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cargo audit
-        working-directory: ../claw-code/rust
+        working-directory: claw-code/rust
         run: cargo install cargo-audit && cargo audit --deny warnings
 
   build-release:
@@ -148,7 +148,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Build Rust Server
-        working-directory: ../claw-code/rust
+        working-directory: claw-code/rust
         run: cargo build --release -p server
 
       - name: Setup Node.js

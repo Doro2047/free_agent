@@ -83,7 +83,7 @@ jobs:
       - name: Cache cargo registry
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: './backend'
+          workspaces: './claw-code/rust'
 
       - name: Cache Go modules
         uses: actions/cache@v3
@@ -98,7 +98,7 @@ jobs:
       - name: Build Rust binary
         id: build
         run: |
-          cd backend
+          cd claw-code/rust
           cargo build --release --target x86_64-pc-windows-gnu
           ls -la target/x86_64-pc-windows-gnu/release/*.exe
 
@@ -108,7 +108,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: backend-binary
-          path: backend/target/x86_64-pc-windows-gnu/release/free_agent.exe
+          path: claw-code/rust/target/x86_64-pc-windows-gnu/release/server.exe
           retention-days: 5
 
   build-frontend:
@@ -189,7 +189,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-binary
-          path: backend/
+          path: claw-code/rust/
 
       - name: Download frontend dist
         uses: actions/download-artifact@v4
