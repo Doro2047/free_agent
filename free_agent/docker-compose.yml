@@ -9,17 +9,17 @@ services:
       - NODE_ENV=development
       - VITE_SERVER_URL=http://localhost:3000/api
     volumes:
-      - ./frontend:/app/frontend
+      - ./free_agent/frontend:/app/frontend
       - ./claw-code:/app/claw-code
     ports:
       - "5173:5173"
       - "3000:3000"
-    command: bash scripts/dev.sh
+    command: bash free_agent/scripts/dev.sh
 
   rust:
     build:
       context: ./claw-code/rust
-      dockerfile: ../Dockerfile.rust
+      dockerfile: Dockerfile
     environment:
       - RUST_LOG=info
     volumes:

@@ -1,10 +1,11 @@
 import { renderHook, RenderHookResult } from '@testing-library/react';
 import { useState, useEffect, useRef, useCallback, act } from 'react';
+import { vi, Mock } from 'vitest';
 
 export interface MockIntersectionObserver {
-  observe: jest.Mock;
-  unobserve: jest.Mock;
-  disconnect: jest.Mock;
+  observe: Mock;
+  unobserve: Mock;
+  disconnect: Mock;
   mockElements: Set<Element>;
 }
 
@@ -12,13 +13,13 @@ export function createMockIntersectionObserver(): MockIntersectionObserver {
   const mockElements = new Set<Element>();
 
   return {
-    observe: jest.fn((element: Element) => {
+    observe: vi.fn((element: Element) => {
       mockElements.add(element);
     }),
-    unobserve: jest.fn((element: Element) => {
+    unobserve: vi.fn((element: Element) => {
       mockElements.delete(element);
     }),
-    disconnect: jest.fn(() => {
+    disconnect: vi.fn(() => {
       mockElements.clear();
     }),
     mockElements,
@@ -31,14 +32,14 @@ export function mockIntersectionObserver(): void {
   Object.defineProperty(window, 'IntersectionObserver', {
     writable: true,
     configurable: true,
-    value: jest.fn().mockImplementation(() => mock),
+    value: vi.fn().mockImplementation(() => mock),
   });
 }
 
 export interface MockResizeObserver {
-  observe: jest.Mock;
-  unobserve: jest.Mock;
-  disconnect: jest.Mock;
+  observe: Mock;
+  unobserve: Mock;
+  disconnect: Mock;
   mockElements: Map<Element, DOMRect>;
 }
 
@@ -46,13 +47,13 @@ export function createMockResizeObserver(): MockResizeObserver {
   const mockElements = new Map<Element, DOMRect>();
 
   return {
-    observe: jest.fn((element: Element) => {
+    observe: vi.fn((element: Element) => {
       mockElements.set(element, element.getBoundingClientRect());
     }),
-    unobserve: jest.fn((element: Element) => {
+    unobserve: vi.fn((element: Element) => {
       mockElements.delete(element);
     }),
-    disconnect: jest.fn(() => {
+    disconnect: vi.fn(() => {
       mockElements.clear();
     }),
     mockElements,
@@ -65,7 +66,7 @@ export function mockResizeObserver(): void {
   Object.defineProperty(window, 'ResizeObserver', {
     writable: true,
     configurable: true,
-    value: jest.fn().mockImplementation(() => mock),
+    value: vi.fn().mockImplementation(() => mock),
   });
 }
 
@@ -73,15 +74,15 @@ export function mockMatchMedia(): void {
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     configurable: true,
-    value: jest.fn().mockImplementation((query: string) => ({
+    value: vi.fn().mockImplementation((query: string) => ({
       matches: false,
       media: query,
       onchange: null,
-      addListener: jest.fn(),
-      removeListener: jest.fn(),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     })),
   });
 }
@@ -93,17 +94,17 @@ export function mockLocalStorage(): void {
     writable: true,
     configurable: true,
     value: {
-      getItem: jest.fn((key: string) => storage[key] || null),
-      setItem: jest.fn((key: string, value: string) => {
+      getItem: vi.fn((key: string) => storage[key] || null),
+      setItem: vi.fn((key: string, value: string) => {
         storage[key] = value;
       }),
-      removeItem: jest.fn((key: string) => {
+      removeItem: vi.fn((key: string) => {
         delete storage[key];
       }),
-      clear: jest.fn(() => {
+      clear: vi.fn(() => {
         Object.keys(storage).forEach((key) => delete storage[key]);
       }),
-      key: jest.fn((index: number) => Object.keys(storage)[index] || null),
+      key: vi.fn((index: number) => Object.keys(storage)[index] || null),
       get length() {
         return Object.keys(storage).length;
       },
@@ -118,17 +119,17 @@ export function mockSessionStorage(): void {
     writable: true,
     configurable: true,
     value: {
-      getItem: jest.fn((key: string) => storage[key] || null),
-      setItem: jest.fn((key: string, value: string) => {
+      getItem: vi.fn((key: string) => storage[key] || null),
+      setItem: vi.fn((key: string, value: string) => {
         storage[key] = value;
       }),
-      removeItem: jest.fn((key: string) => {
+      removeItem: vi.fn((key: string) => {
         delete storage[key];
       }),
-      clear: jest.fn(() => {
+      clear: vi.fn(() => {
         Object.keys(storage).forEach((key) => delete storage[key]);
       }),
-      key: jest.fn((index: number) => Object.keys(storage)[index] || null),
+      key: vi.fn((index: number) => Object.keys(storage)[index] || null),
       get length() {
         return Object.keys(storage).length;
       },
@@ -141,7 +142,7 @@ export function mockGeolocation(): void {
     writable: true,
     configurable: true,
     value: {
-      getCurrentPosition: jest.fn((success: GeolocationPositionCallback) => {
+      getCurrentPosition: vi.fn((success: GeolocationPositionCallback) => {
         success({
           coords: {
             latitude: 37.7749,
@@ -155,8 +156,8 @@ export function mockGeolocation(): void {
           timestamp: Date.now(),
         } as GeolocationPosition);
       }),
-      watchPosition: jest.fn(),
-      clearWatch: jest.fn(),
+      watchPosition: vi.fn(),
+      clearWatch: vi.fn(),
     },
   });
 }
@@ -166,18 +167,18 @@ export function mockMediaDevices(): void {
     writable: true,
     configurable: true,
     value: {
-      getUserMedia: jest.fn(() => Promise.resolve({
+      getUserMedia: vi.fn(() => Promise.resolve({
         getTracks: () => [],
         stop: () => {},
       })),
-      getDisplayMedia: jest.fn(() => Promise.resolve({
+      getDisplayMedia: vi.fn(() => Promise.resolve({
         getTracks: () => [],
         stop: () => {},
       })),
-      enumerateDevices: jest.fn(() => Promise.resolve([])),
-      addEventListener: jest.fn(),
-      removeEventListener: jest.fn(),
-      dispatchEvent: jest.fn(),
+      enumerateDevices: vi.fn(() => Promise.resolve([])),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
     },
   });
 }
@@ -188,8 +189,8 @@ export function mockNotifications(): void {
     configurable: true,
     value: {
       permission: 'default',
-      requestPermission: jest.fn(() => Promise.resolve('granted')),
-      close: jest.fn(),
+      requestPermission: vi.fn(() => Promise.resolve('granted')),
+      close: vi.fn(),
     },
   });
 }
@@ -199,10 +200,10 @@ export function mockClipboard(): void {
     writable: true,
     configurable: true,
     value: {
-      readText: jest.fn(() => Promise.resolve('')),
-      writeText: jest.fn(() => Promise.resolve()),
-      read: jest.fn(() => Promise.resolve([])),
-      write: jest.fn(() => Promise.resolve()),
+      readText: vi.fn(() => Promise.resolve('')),
+      writeText: vi.fn(() => Promise.resolve()),
+      read: vi.fn(() => Promise.resolve([])),
+      write: vi.fn(() => Promise.resolve()),
     },
   });
 }
@@ -218,7 +219,7 @@ export function mockFetch(): void {
     blob: () => Promise.resolve(new Blob()),
     arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
     formData: () => Promise.resolve(new FormData()),
-    clone: jest.fn(),
+    clone: vi.fn(),
     body: null,
     bodyUsed: false,
     redirect: 'follow',
@@ -231,7 +232,7 @@ export function mockFetch(): void {
     signal: null as AbortSignal | null,
   };
 
-  global.fetch = jest.fn(() => Promise.resolve(mockResponse as unknown as Response));
+  global.fetch = vi.fn(() => Promise.resolve(mockResponse as unknown as Response));
 }
 
 export function setupAllMocks(): void {
@@ -248,7 +249,7 @@ export function setupAllMocks(): void {
 }
 
 export function cleanupAllMocks(): void {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 }
 
 export function createMockEvent(
@@ -329,53 +330,53 @@ export function createMockFile(
 ): File {
   const content = new Array(size).fill('a').join('');
   const blob = new Blob([content], { type });
-  
+
   return new File([blob], name, { type });
 }
 
 export function createMockFormData(): FormData {
   const formData = new FormData();
-  
-  formData.append = jest.fn((key: string, value: string | Blob) => {
+
+  formData.append = vi.fn((key: string, value: string | Blob) => {
     return formData;
   });
-  
-  formData.delete = jest.fn((key: string) => {
+
+  formData.delete = vi.fn((key: string) => {
     return formData;
   });
-  
-  formData.get = jest.fn((key: string) => {
+
+  formData.get = vi.fn((key: string) => {
     return null;
   });
-  
-  formData.getAll = jest.fn((key: string) => {
+
+  formData.getAll = vi.fn((key: string) => {
     return [];
   });
-  
-  formData.has = jest.fn((key: string) => {
+
+  formData.has = vi.fn((key: string) => {
     return false;
   });
-  
-  formData.set = jest.fn((key: string, value: string | Blob) => {
+
+  formData.set = vi.fn((key: string, value: string | Blob) => {
     return formData;
   });
-  
-  formData.forEach = jest.fn((callback: (value: string | Blob, key: string, parent: FormData) => void) => {
+
+  formData.forEach = vi.fn((callback: (value: string | Blob, key: string, parent: FormData) => void) => {
     return;
   });
-  
-  formData.keys = jest.fn(function* () {
+
+  formData.keys = vi.fn(function* () {
     return;
   });
-  
-  formData.values = jest.fn(function* () {
+
+  formData.values = vi.fn(function* () {
     return;
   });
-  
-  formData.entries = jest.fn(function* () {
+
+  formData.entries = vi.fn(function* () {
     return;
   });
-  
+
   Object.defineProperty(formData, 'length', {
     value: 0,
     writable: false,
@@ -386,20 +387,20 @@ export function createMockFormData(): FormData {
 
 export function createMockURL(): void {
   const mockUrl = 'http://localhost:3000/test';
-  
-  global.URL.createObjectURL = jest.fn(() => mockUrl);
-  global.URL.revokeObjectURL = jest.fn();
+
+  global.URL.createObjectURL = vi.fn(() => mockUrl);
+  global.URL.revokeObjectURL = vi.fn();
 }
 
 export function createMockPerformance(): void {
   const performanceData: PerformanceEntry[] = [];
-  
+
   Object.defineProperty(window, 'performance', {
     writable: true,
     configurable: true,
     value: {
-      now: jest.fn(() => Date.now()),
-      mark: jest.fn((name: string) => {
+      now: vi.fn(() => Date.now()),
+      mark: vi.fn((name: string) => {
         performanceData.push({
           name,
           entryType: 'mark',
@@ -408,7 +409,7 @@ export function createMockPerformance(): void {
           toJSON: () => ({}),
         } as PerformanceEntry);
       }),
-      measure: jest.fn((name: string, startMark?: string, endMark?: string) => {
+      measure: vi.fn((name: string, startMark?: string, endMark?: string) => {
         performanceData.push({
           name,
           entryType: 'measure',
@@ -417,14 +418,14 @@ export function createMockPerformance(): void {
           toJSON: () => ({}),
         } as PerformanceEntry);
       }),
-      getEntriesByType: jest.fn((type: string) => {
+      getEntriesByType: vi.fn((type: string) => {
         return performanceData.filter((entry) => entry.entryType === type);
       }),
-      getEntriesByName: jest.fn((name: string) => {
+      getEntriesByName: vi.fn((name: string) => {
         return performanceData.filter((entry) => entry.name === name);
       }),
-      clearMarks: jest.fn(),
-      clearMeasures: jest.fn(),
+      clearMarks: vi.fn(),
+      clearMeasures: vi.fn(),
       navigation: {
         type: 0,
         redirectCount: 0,
@@ -469,13 +470,13 @@ export function mockAnimationFrame(): void {
   let rafId = 0;
   const callbacks = new Map<number, (time: number) => void>();
 
-  jest.spyOn(window, 'requestAnimationFrame').mockImplementation((callback: (time: number) => number) => {
+  vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback: (time: number) => number) => {
     rafId++;
     callbacks.set(rafId, callback);
     return rafId;
   });
 
-  jest.spyOn(window, 'cancelAnimationFrame').mockImplementation((id: number) => {
+  vi.spyOn(window, 'cancelAnimationFrame').mockImplementation((id: number) => {
     callbacks.delete(id);
   });
 
@@ -524,7 +525,7 @@ export function createMockWebSocket(): void {
       }, 0);
     }
 
-    send(data: string | ArrayBuffer | Blob): void {
+    send(_data: string | ArrayBuffer | Blob): void {
       if (this.readyState !== MockWebSocket.OPEN) {
         throw new Error('WebSocket is not open');
       }
