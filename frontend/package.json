@@ -11,6 +11,7 @@
     "dev:llama": "node scripts/start-llama.mjs",
     "dev:rust": "cd ..\\..\\claw-code\\rust && cargo build --release",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
     "electron:dev": "concurrently \"npm run dev:renderer\" \"wait-on http://localhost:5173 && electron .\"",

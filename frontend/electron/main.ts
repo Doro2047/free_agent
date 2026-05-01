@@ -61,7 +61,7 @@ function stopApiProxy(): void {
 autoUpdater.logger = log;
 log.transports.file.level = 'info';
 
-const updateOwner = process.env.ELECTRON_UPDATER_OWNER || 'your-username';
+const updateOwner = process.env.ELECTRON_UPDATER_OWNER || 'Doro2047';
 const updateRepo = process.env.ELECTRON_UPDATER_REPO || 'free-agent';
 
 autoUpdater.setFeedURL({
@@ -265,31 +265,25 @@ app.whenReady().then(async () => {
 
   const ALLOWED_ORIGINS = ['http://localhost:5173', 'http://127.0.0.1:5173', 'file://'];
 
-function isOriginAllowed(origin: string): boolean {
-  if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
-    return true;
+  function isOriginAllowed(origin: string): boolean {
+    return ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed));
   }
-  if (origin === 'file://') {
-    return true;
-  }
-  return false;
-}
 
-session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-  const headers = { ...details.responseHeaders };
-  if (details.url.includes(`127.0.0.1:${PROXY_PORT}`)) {
-    const origin = details.responseHeaders?.['origin']?.[0] || details.responseHeaders?.['Origin']?.[0] || '';
-    if (isOriginAllowed(origin)) {
-      headers['Access-Control-Allow-Origin'] = [origin];
-    } else {
-      headers['Access-Control-Allow-Origin'] = ['http://localhost:5173'];
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    const headers = { ...details.responseHeaders };
+    if (details.url.includes(`127.0.0.1:${PROXY_PORT}`)) {
+      const origin = details.requestHeaders?.['origin']?.[0] || details.requestHeaders?.['Origin']?.[0] || '';
+      if (isOriginAllowed(origin)) {
+        headers['Access-Control-Allow-Origin'] = [origin];
+      } else {
+        headers['Access-Control-Allow-Origin'] = ['http://localhost:5173'];
+      }
+      headers['Access-Control-Allow-Methods'] = ['GET, POST, PUT, DELETE, PATCH, OPTIONS'];
+      headers['Access-Control-Allow-Headers'] = ['Content-Type, Authorization'];
+      headers['Access-Control-Allow-Credentials'] = ['true'];
     }
-    headers['Access-Control-Allow-Methods'] = ['GET, POST, PUT, DELETE, PATCH, OPTIONS'];
-    headers['Access-Control-Allow-Headers'] = ['Content-Type, Authorization'];
-    headers['Access-Control-Allow-Credentials'] = ['true'];
-  }
-  callback({ responseHeaders: headers });
-});
+    callback({ responseHeaders: headers });
+  });
 
   const savedConfig = loadWindowConfig();
   const primaryDisplay = screen.getPrimaryDisplay();

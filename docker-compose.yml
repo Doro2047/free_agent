@@ -9,12 +9,12 @@ services:
       - NODE_ENV=development
       - VITE_SERVER_URL=http://localhost:3000/api
     volumes:
-      - ./free_agent/frontend:/app/frontend
+      - ./frontend:/app/frontend
       - ./claw-code:/app/claw-code
     ports:
       - "5173:5173"
       - "3000:3000"
-    command: bash free_agent/scripts/dev.sh
+    command: bash scripts/dev.sh
 
   rust:
     build:

@@ -42,3 +42,6 @@ frontend/resources/server/
 *.zip
 *.tar.gz
 *.rar
+
+# Trae agent files
+.trae/
