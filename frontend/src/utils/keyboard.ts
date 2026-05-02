@@ -298,11 +298,20 @@ export function useKeyboardShortcuts(
     shortcut: KeyboardShortcut;
     handler: (event: KeyboardEvent) => void;
   }>,
-  dependencies: unknown[] = []
+  _dependencies: unknown[] = []
 ): void {
-  shortcuts.forEach(({ shortcut, handler }) => {
-    useKeyboardShortcut(shortcut, handler, dependencies);
-  });
+  useEffect(() => {
+    const cleanupFns: (() => void)[] = [];
+    
+    shortcuts.forEach(({ shortcut, handler }) => {
+      const cleanup = registerShortcut(shortcut, handler);
+      cleanupFns.push(cleanup);
+    });
+    
+    return () => {
+      cleanupFns.forEach(fn => fn());
+    };
+  }, [shortcuts]);
 }
 
 export function useShortcutManager() {

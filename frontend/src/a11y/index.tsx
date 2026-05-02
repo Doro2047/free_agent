@@ -413,12 +413,15 @@ export function useKeyboardNavigation<T extends HTMLElement>(
     onFocus?.(newIndex);
   };
 
+  const getCurrentIndex = () => currentIndexRef.current;
+  const setCurrentIndex = (index: number) => {
+    currentIndexRef.current = Math.max(0, Math.min(index, itemCount - 1));
+  };
+
   return {
     handleKeyDown,
-    currentIndex: currentIndexRef.current,
-    setCurrentIndex: (index: number) => {
-      currentIndexRef.current = Math.max(0, Math.min(index, itemCount - 1));
-    },
+    getCurrentIndex,
+    setCurrentIndex,
   };
 }
 

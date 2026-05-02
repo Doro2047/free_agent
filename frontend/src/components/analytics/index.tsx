@@ -104,7 +104,9 @@ function setUserId(userId: string | null): void {
     } else {
       localStorage.removeItem(STORAGE_KEY_USER_ID);
     }
-  } catch {}
+  } catch (e) {
+    // Ignore storage errors
+  }
 }
 
 function getOptOut(): boolean {
@@ -118,7 +120,9 @@ function getOptOut(): boolean {
 function setOptOut(optOut: boolean): void {
   try {
     localStorage.setItem(STORAGE_KEY_OPT_OUT, optOut.toString());
-  } catch {}
+  } catch (e) {
+    // Ignore storage errors
+  }
 }
 
 export interface AnalyticsProviderProps {
@@ -307,10 +311,9 @@ export function AnalyticsProvider({
     setUserId(null);
     userTraitsRef.current = {};
     queueRef.current = [];
-    anonymousId;
 
     log('Reset');
-  }, [log, anonymousId]);
+  }, [log]);
 
   const setUserProperties = useCallback((traits: UserTraits) => {
     userTraitsRef.current = { ...userTraitsRef.current, ...traits };

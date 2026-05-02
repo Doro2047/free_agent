@@ -61,17 +61,19 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   useEffect(() => {
     if (isOpen) {
-      setSearchQuery('');
-      setSelectedIndex(0);
-      setShowRecent(false);
       setTimeout(() => {
+        setSearchQuery('');
+        setSelectedIndex(0);
+        setShowRecent(false);
         inputRef.current?.focus();
-      }, 50);
+      }, 0);
     }
   }, [isOpen]);
 
   useEffect(() => {
-    setSelectedIndex(0);
+    setTimeout(() => {
+      setSelectedIndex(0);
+    }, 0);
   }, [searchQuery]);
 
   useEffect(() => {

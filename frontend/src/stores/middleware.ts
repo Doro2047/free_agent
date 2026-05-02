@@ -1,6 +1,6 @@
 import { StateCreator, StoreMutatorIdentifier } from 'zustand';
 import { persist, createJSONStorage, PersistOptions } from 'zustand/middleware';
-import { useStorage } from '../utils/storage';
+import { safeStorage } from '../utils/storage';
 
 export type ImmerPlugin = (
   config: StateCreator<object>,
@@ -128,10 +128,8 @@ export function combineMiddlewares(
 export function createPersistMiddleware<T extends object>(
   options: PersistOptions<T, T>
 ) {
-  const storage = useStorage();
-
   return persist(options, {
-    storage: createJSONStorage(() => storage),
+    storage: createJSONStorage(() => safeStorage),
     partialize: (state) => state,
     merge: (persisted, current) => ({
       ...current,

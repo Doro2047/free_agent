@@ -107,6 +107,7 @@ export function MessageInput({
     } else if (type === 'system') {
       setShowSystemMessage(true)
     } else if (type === 'mcp') {
+      // MCP type handling placeholder
     }
   }, [])
 

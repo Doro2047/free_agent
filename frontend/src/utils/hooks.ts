@@ -416,10 +416,13 @@ export function useIsomorphicLayoutEffect(
   effect: React.EffectCallback,
   deps?: React.DependencyList
 ) {
-  if (typeof window !== 'undefined') {
-    return useEffect(effect, deps);
-  }
-  return () => {};
+  const isBrowser = typeof window !== 'undefined';
+  
+  useEffect(() => {
+    if (isBrowser) {
+      return effect();
+    }
+  }, deps);
 }
 
 export function useCancellable<T extends (...args: any[]) => any>(
