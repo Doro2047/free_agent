@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, ReactNode, KeyboardEvent } from 'react';
+import React, { useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 
 export interface CommandItem {
@@ -37,7 +37,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [showRecent, setShowRecent] = useState(false);
+  const [_showRecent, setShowRecent] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
@@ -263,7 +263,7 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({
                 >
                   {category}
                 </div>
-                {categoryItems.map((item, index) => {
+                {categoryItems.map((item, _index) => {
                   const flatIndex = flatItems.indexOf(item);
                   const isSelected = flatIndex === selectedIndex;
 

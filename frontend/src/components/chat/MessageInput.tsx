@@ -331,7 +331,7 @@ export function MessageInput({
                 Cancel
               </Button>
               <Button
-                variant="default"
+                variant="solid"
                 size="sm"
                 onClick={handleSystemMessageSave}
                 disabled={!systemMessage.trim()}
