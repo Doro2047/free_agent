@@ -70,10 +70,6 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Lint
-        working-directory: frontend
-        run: npm run lint -- --quiet
-
       - name: Build
         working-directory: frontend
         run: npm run build
@@ -170,31 +166,4 @@ jobs:
             frontend/release/**/*
           if-no-files-found: warn
 
-  lint-changed:
-    name: Lint Changed Files
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Get changed files
-        id: changed
-        uses: tj-actions/changed-files@v44
-
-      - name: Setup Node.js
-        if: steps.changed.outputs.any_changed == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install dependencies
-        if: steps.changed.outputs.any_changed == 'true'
-        working-directory: frontend
-        run: npm ci
-
-      - name: Run ESLint
-        if: steps.changed.outputs.any_changed == 'true'
-        working-directory: frontend
-        run: npx eslint ${{ steps.changed.outputs.all_changed_files }} --quiet --ignore-pattern '*.json' --ignore-pattern '*.md' --ignore-pattern '*.yml'

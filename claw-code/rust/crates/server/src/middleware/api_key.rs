@@ -7,7 +7,7 @@ use std::env;
 use tracing::warn;
 
 lazy_static! {
-    static ref EXPECTED_API_KEY: String = env::var("DORO_API_KEY").unwrap_or_default() ;
+    static ref EXPECTED_API_KEY: String = env::var("DORO_API_KEY").unwrap_or_default();
 }
 
 /// Middleware that validates the X-API-Key header.

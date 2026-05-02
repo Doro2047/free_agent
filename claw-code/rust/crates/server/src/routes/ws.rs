@@ -16,7 +16,7 @@ use crate::routes::commands::validate_command;
 use crate::state::{AppState, WsEvent, WsEventType};
 
 lazy_static! {
-    static ref EXPECTED_WS_API_KEY: String = std::env::var("DORO_API_KEY").unwrap_or_default() ;
+    static ref EXPECTED_WS_API_KEY: String = std::env::var("DORO_API_KEY").unwrap_or_default();
 }
 
 // ============================================================================

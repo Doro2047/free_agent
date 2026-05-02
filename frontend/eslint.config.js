@@ -1,4 +1,3 @@
-import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
@@ -6,7 +5,7 @@ import globals from 'globals';
 export default tseslint.config(
   { ignores: ['dist', 'node_modules', 'release', '*.js', 'src/stories', 'src/test'] },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,

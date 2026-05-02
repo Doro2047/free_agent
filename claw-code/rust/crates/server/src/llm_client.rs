@@ -7,9 +7,7 @@
 
 use std::sync::Arc;
 
-use api::{
-    ContentBlockDelta, InputContentBlock, InputMessage, MessageRequest, StreamEvent,
-};
+use api::{ContentBlockDelta, InputContentBlock, InputMessage, MessageRequest, StreamEvent};
 use api::{OpenAiCompatClient, OpenAiCompatConfig};
 use runtime::{ApiClient, ApiRequest, AssistantEvent, RuntimeError, TokenUsage};
 use serde_json::Value;
