@@ -13,7 +13,8 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "types": ["node"],
-    "allowImportingTsExtensions": false
+    "allowImportingTsExtensions": false,
+    "composite": true
   },
   "include": ["./**/*.ts"],
   "exclude": ["node_modules", "dist", "dist-electron"]
