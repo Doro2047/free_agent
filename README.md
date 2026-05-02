@@ -1,6 +1,6 @@
-# FREE Agent
+# 🚀 CodeCraft
 
-AI Programming Assistant Desktop Application - Built with Electron + React + Rust for high-performance architecture.
+AI 编程助手桌面应用 - 基于 Electron + React + Rust 构建的高性能架构，融合多 LLM 后端、MCP 协议与本地优先设计。
 
 ## Features
 
@@ -55,8 +55,8 @@ AI Programming Assistant Desktop Application - Built with Electron + React + Rus
 ### Clone and Setup
 
 ```bash
-git clone https://github.com/Doro2047/free_agent.git
-cd free_agent
+git clone https://github.com/Doro2047/codecraft.git
+cd codecraft
 
 # For macOS/Linux
 chmod +x scripts/dev.sh scripts/build.sh
@@ -122,7 +122,7 @@ npm run dev           # Start all services
 ## Project Structure
 
 ```
-free_agent/
+codecraft/
 ├── frontend/         # Electron + React frontend
 │   ├── electron/     # Electron main process
 │   ├── src/         # React source
