@@ -34,7 +34,7 @@ export interface FocusTrapProps {
 export class FocusTrap extends React.Component<FocusTrapProps> {
   private containerRef: React.RefObject<HTMLDivElement>;
   private previouslyFocused: HTMLElement | null;
-  private focusableElements: string = [
+  private focusableElements = [
     'button:not([disabled])',
     'a[href]',
     'input:not([disabled])',
@@ -276,6 +276,11 @@ export function useFocusTrap({
       '[tabindex]:not([tabindex="-1"])',
     ].join(', ');
 
+    const container = containerRef.current;
+    const focusableElements = container 
+      ? (Array.from(container.querySelectorAll(focusableSelectors)) as HTMLElement[])
+      : [];
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault();
@@ -288,14 +293,14 @@ export function useFocusTrap({
       const container = containerRef.current;
       if (!container) return;
 
-      const focusableElements = Array.from(
+      const currentFocusableElements = Array.from(
         container.querySelectorAll(focusableSelectors)
       ) as HTMLElement[];
 
-      if (focusableElements.length === 0) return;
+      if (currentFocusableElements.length === 0) return;
 
-      const firstElement = focusableElements[0];
-      const lastElement = focusableElements[focusableElements.length - 1];
+      const firstElement = currentFocusableElements[0];
+      const lastElement = currentFocusableElements[currentFocusableElements.length - 1];
       const activeElement = document.activeElement;
 
       if (event.shiftKey) {
