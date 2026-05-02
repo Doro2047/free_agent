@@ -1,23 +1,26 @@
-name: free-agent
-version: 0.1.0
-private: true
-description: FREE Agent - AI Programming Assistant Desktop Application
-author: FREE Agent Contributors
-license: MIT
-workspaces:
-  - frontend
-  - claw-code/rust
-
-scripts:
-  dev: cd frontend && npm run dev
-  dev:browser: cd frontend && npx concurrently --names "API,UI" --prefix-colors "blue,green" "npm run dev:server" "npm run dev:renderer"
-  dev:electron: cd frontend && npm run electron:dev
-  build: cd frontend && npm run build
-  build:all: cd frontend && npm run build:all
-  build:app: cd frontend && npm run electron:build
-  lint: cd frontend && npm run lint
-  lint:fix: cd frontend && npm run lint:fix
-  format: cd frontend && npm run format
-  test: cd frontend && npm run test
-  typecheck: cd frontend && npm run typecheck
-  clean: cd frontend && rm -rf dist dist-electron release
+{
+  "name": "free-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FREE Agent - AI Programming Assistant Desktop Application",
+  "author": "FREE Agent Contributors",
+  "license": "MIT",
+  "workspaces": [
+    "frontend",
+    "claw-code/rust"
+  ],
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "dev:browser": "cd frontend && npx concurrently --names \"API,UI\" --prefix-colors \"blue,green\" \"npm run dev:server\" \"npm run dev:renderer\"",
+    "dev:electron": "cd frontend && npm run electron:dev",
+    "build": "cd frontend && npm run build",
+    "build:all": "cd frontend && npm run build:all",
+    "build:app": "cd frontend && npm run electron:build",
+    "lint": "cd frontend && npm run lint",
+    "lint:fix": "cd frontend && npm run lint:fix",
+    "format": "cd frontend && npm run format",
+    "test": "cd frontend && npm run test",
+    "typecheck": "cd frontend && npm run typecheck",
+    "clean": "cd frontend && rm -rf dist dist-electron release"
+  }
+}

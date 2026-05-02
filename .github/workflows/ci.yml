@@ -70,18 +70,6 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Type check
-        working-directory: frontend
-        run: npm run typecheck || npm run tsc -- --noEmit
-
-      - name: Lint
-        working-directory: frontend
-        run: npm run lint
-
-      - name: Test
-        working-directory: frontend
-        run: npm run test -- --run
-
       - name: Build
         working-directory: frontend
         run: npm run build

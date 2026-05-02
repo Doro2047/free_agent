@@ -266,7 +266,7 @@ const [models, setModels] = useState<Model[]>([])
                 取消
               </Button>
               <Button
-                variant="default"
+                variant="solid"
                 size="xs"
                 onClick={handleAdd}
                 className="active:scale-95 transition-transform duration-150"

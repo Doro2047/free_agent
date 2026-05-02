@@ -182,7 +182,7 @@ export function TaskPanel() {
                 取消
               </Button>
               <Button
-                variant="default"
+                variant="solid"
                 size="sm"
                 onClick={handleCreate}
                 disabled={loading || !newTitle.trim()}

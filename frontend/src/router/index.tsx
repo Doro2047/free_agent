@@ -1,9 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import MainLayout from '../components/layout/MainLayout';
-import ChatPanel from '../components/panels/ChatPanel';
-import SettingsPanel from '../components/settings/SettingsPanel';
-import TaskPanel from '../components/panels/TaskPanel';
-import DevToolsPanel from '../components/panels/DevToolsPanel';
+import { ChatPanel } from '../components/panels/ChatPanel';
+import { SettingsPanel } from '../components/settings/SettingsPanel';
+import { TaskPanel } from '../components/panels/TaskPanel';
+import { DevToolsPanel } from '../components/panels/DevToolsPanel';
 
 const router = createBrowserRouter([
   {

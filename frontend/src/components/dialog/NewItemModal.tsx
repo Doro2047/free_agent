@@ -103,7 +103,7 @@ export function NewItemModal({
             取消
           </Button>
           <Button
-            variant="default"
+            variant="solid"
             size="sm"
             onClick={handleConfirm}
             disabled={!name.trim()}
