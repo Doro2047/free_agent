@@ -98,9 +98,7 @@ pub struct MessageResponse {
 ///
 /// Returns the complete configuration store as a key-value JSON object.
 #[axum::debug_handler]
-pub async fn get_config(
-    State(state): State<AppState>,
-) -> Result<Json<ConfigResponse>, AppError> {
+pub async fn get_config(State(state): State<AppState>) -> Result<Json<ConfigResponse>, AppError> {
     info!("Fetching runtime configuration");
 
     let db = state.db.lock().await;
@@ -174,9 +172,7 @@ pub async fn update_config(
 ///
 /// Removes all custom config entries, keeping only seeded defaults.
 #[axum::debug_handler]
-pub async fn reset_config(
-    State(state): State<AppState>,
-) -> Result<Json<ConfigResponse>, AppError> {
+pub async fn reset_config(State(state): State<AppState>) -> Result<Json<ConfigResponse>, AppError> {
     info!("Resetting configuration to defaults");
 
     let db = state.db.lock().await;
@@ -190,8 +186,15 @@ pub async fn reset_config(
     ];
 
     // Delete all entries not in the defaults list
-    let placeholders = default_keys.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
-    let sql = format!("DELETE FROM config_store WHERE key NOT IN ({})", placeholders);
+    let placeholders = default_keys
+        .iter()
+        .map(|_| "?")
+        .collect::<Vec<_>>()
+        .join(", ");
+    let sql = format!(
+        "DELETE FROM config_store WHERE key NOT IN ({})",
+        placeholders
+    );
 
     let mut params: Vec<&dyn rusqlite::types::ToSql> = Vec::new();
     for key in &default_keys {
@@ -221,9 +224,8 @@ pub async fn get_config_section(
     let db = state.db.lock().await;
     let prefix = format!("{}.", section);
 
-    let mut stmt = db.prepare(
-        "SELECT key, value FROM config_store WHERE key LIKE ?1 ORDER BY key",
-    )?;
+    let mut stmt =
+        db.prepare("SELECT key, value FROM config_store WHERE key LIKE ?1 ORDER BY key")?;
 
     let mut config_map = serde_json::Map::new();
 
@@ -255,9 +257,7 @@ pub async fn get_config_section(
 ///
 /// Returns a list of tasks ordered by creation date (newest first).
 #[axum::debug_handler]
-pub async fn get_tasks(
-    State(state): State<AppState>,
-) -> Result<Json<Vec<TaskResponse>>, AppError> {
+pub async fn get_tasks(State(state): State<AppState>) -> Result<Json<Vec<TaskResponse>>, AppError> {
     info!("Fetching tasks");
 
     let db = state.db.lock().await;
@@ -331,13 +331,13 @@ pub async fn delete_task(
         rusqlite::params![id],
     )?;
 
-    let rows = db.execute(
-        "DELETE FROM tasks WHERE id = ?1",
-        rusqlite::params![id],
-    )?;
+    let rows = db.execute("DELETE FROM tasks WHERE id = ?1", rusqlite::params![id])?;
 
     if rows == 0 {
-        return Err(AppError::not_found(format!("Task with id {} not found", id)));
+        return Err(AppError::not_found(format!(
+            "Task with id {} not found",
+            id
+        )));
     }
 
     Ok(Json(serde_json::json!({

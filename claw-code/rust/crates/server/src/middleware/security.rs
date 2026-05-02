@@ -30,15 +30,16 @@ pub fn create_ws_connection_counter() -> WsConnectionCount {
 /// - Rejects oversized request bodies to prevent memory exhaustion attacks
 /// - Limits WebSocket connections to prevent resource exhaustion
 /// - Adds security response headers (X-Content-Type-Options, X-Frame-Options, etc.)
-pub async fn security_middleware(
-    request: Request,
-    next: Next,
-) -> Response {
+pub async fn security_middleware(request: Request, next: Next) -> Response {
     // Check if this is a WebSocket upgrade request
     let is_ws_upgrade = request
         .headers()
         .get(UPGRADE)
-        .map(|v| v.to_str().map(|s| s.eq_ignore_ascii_case("websocket")).unwrap_or(false))
+        .map(|v| {
+            v.to_str()
+                .map(|s| s.eq_ignore_ascii_case("websocket"))
+                .unwrap_or(false)
+        })
         .unwrap_or(false);
 
     if is_ws_upgrade {

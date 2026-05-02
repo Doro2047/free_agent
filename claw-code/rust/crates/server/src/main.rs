@@ -15,9 +15,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Initialize tracing
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                EnvFilter::new("info,server=debug,runtime=debug")
-            }),
+            EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new("info,server=debug,runtime=debug")),
         )
         .with_target(false)
         .compact()
@@ -47,9 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     // Start the HTTP server
     let listener = tokio::net::TcpListener::bind(&server_config.bind_address())
         .await
-        .map_err(|e| {
-            format!("Failed to bind to {}: {}", server_config.bind_address(), e)
-        })?;
+        .map_err(|e| format!("Failed to bind to {}: {}", server_config.bind_address(), e))?;
 
     info!(
         address = %server_config.bind_address(),
@@ -74,7 +71,9 @@ async fn load_runtime_config(
         let config_dir = std::path::Path::new(config_path);
         let cwd = std::env::current_dir()?;
         let loader = runtime::ConfigLoader::new(&cwd, config_dir);
-        let config = loader.load().map_err(|e| format!("Failed to load config: {}", e))?;
+        let config = loader
+            .load()
+            .map_err(|e| format!("Failed to load config: {}", e))?;
 
         Ok(config)
     } else {

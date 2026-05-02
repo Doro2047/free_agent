@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use crate::session::Session;
+use serde::{Deserialize, Serialize};
 
 const DEFAULT_INPUT_COST_PER_MILLION: f64 = 15.0;
 const DEFAULT_OUTPUT_COST_PER_MILLION: f64 = 75.0;

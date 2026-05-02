@@ -237,9 +237,7 @@ pub async fn list_tools(
 
     let db = state.db.lock().await;
 
-    let mut stmt = db.prepare(
-        "SELECT id, name FROM mcp_servers WHERE enabled = 1",
-    )?;
+    let mut stmt = db.prepare("SELECT id, name FROM mcp_servers WHERE enabled = 1")?;
 
     let enabled_servers: Vec<(String, String)> = stmt
         .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
@@ -347,9 +345,8 @@ pub async fn list_plugins(
 
     let db = state.db.lock().await;
 
-    let mut stmt = db.prepare(
-        "SELECT id, name, description, version, enabled FROM plugins ORDER BY name",
-    )?;
+    let mut stmt =
+        db.prepare("SELECT id, name, description, version, enabled FROM plugins ORDER BY name")?;
 
     let plugins: Vec<PluginInfo> = stmt
         .query_map([], |row| {

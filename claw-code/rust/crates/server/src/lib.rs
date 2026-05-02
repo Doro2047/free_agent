@@ -38,8 +38,8 @@ pub mod middleware;
 pub mod routes;
 pub mod state;
 
-use axum::Router;
 use axum::routing::{delete, get, post, put};
+use axum::Router;
 use tower_http::trace::TraceLayer;
 use tracing::info;
 
@@ -74,8 +74,7 @@ fn default_cors_origins() -> Vec<String> {
 /// 4. Applies tracing middleware
 pub fn create_router(state: AppState) -> Router {
     // Health check routes (no authentication required)
-    let health_router = Router::new()
-        .route("/health", get(routes::health::health_check));
+    let health_router = Router::new().route("/health", get(routes::health::health_check));
 
     // Chat routes
     let chat_router = Router::new()
@@ -109,8 +108,14 @@ pub fn create_router(state: AppState) -> Router {
         .route("/tasks", get(routes::config::get_tasks))
         .route("/tasks", post(routes::config::create_task))
         .route("/tasks/{id}", delete(routes::config::delete_task))
-        .route("/tasks/{task_id}/messages", get(routes::config::get_task_messages))
-        .route("/tasks/{task_id}/messages", post(routes::config::create_message));
+        .route(
+            "/tasks/{task_id}/messages",
+            get(routes::config::get_task_messages),
+        )
+        .route(
+            "/tasks/{task_id}/messages",
+            post(routes::config::create_message),
+        );
 
     // MCP management routes
     let mcp_router = Router::new()
@@ -130,14 +135,8 @@ pub fn create_router(state: AppState) -> Router {
     // Plugin management routes
     let plugins_router = Router::new()
         .route("/plugins", get(routes::mcp::list_plugins))
-        .route(
-            "/plugins/{id}/enable",
-            post(routes::mcp::enable_plugin),
-        )
-        .route(
-            "/plugins/{id}/disable",
-            post(routes::mcp::disable_plugin),
-        );
+        .route("/plugins/{id}/enable", post(routes::mcp::enable_plugin))
+        .route("/plugins/{id}/disable", post(routes::mcp::disable_plugin));
 
     // Assemble all routers under the /api prefix
     let api_router = Router::new()
@@ -150,8 +149,7 @@ pub fn create_router(state: AppState) -> Router {
         .nest("/plugins", plugins_router);
 
     // WebSocket route (outside /api namespace for direct access)
-    let ws_router = Router::new()
-        .route("/ws", get(routes::ws::ws_handler));
+    let ws_router = Router::new().route("/ws", get(routes::ws::ws_handler));
 
     // Apply middleware and state
     let app = Router::new()
@@ -159,7 +157,9 @@ pub fn create_router(state: AppState) -> Router {
         .merge(ws_router)
         .with_state(state)
         .layer(axum::middleware::from_fn(security_middleware))
-        .layer(axum::middleware::from_fn(middleware::api_key::api_key_middleware))
+        .layer(axum::middleware::from_fn(
+            middleware::api_key::api_key_middleware,
+        ))
         .layer(TraceLayer::new_for_http())
         .layer(
             tower_http::cors::CorsLayer::new()

@@ -160,16 +160,19 @@ fn validate_path(project_root: &Path, requested: &Path) -> Result<PathBuf, AppEr
 
     // Canonicalize if the path exists, otherwise canonicalize the parent
     let canonical = if resolved.exists() {
-        resolved.canonicalize().map_err(|e| {
-            AppError::internal(format!("Failed to resolve path: {}", e))
-        })?
+        resolved
+            .canonicalize()
+            .map_err(|e| AppError::internal(format!("Failed to resolve path: {}", e)))?
     } else {
         // For non-existent paths, canonicalize the parent directory
         if let Some(parent) = resolved.parent() {
             if parent.exists() {
-                parent.canonicalize().map_err(|e| {
-                    AppError::internal(format!("Failed to resolve parent path: {}", e))
-                })?.join(resolved.file_name().unwrap_or_default())
+                parent
+                    .canonicalize()
+                    .map_err(|e| {
+                        AppError::internal(format!("Failed to resolve parent path: {}", e))
+                    })?
+                    .join(resolved.file_name().unwrap_or_default())
             } else {
                 resolved
             }
@@ -179,9 +182,9 @@ fn validate_path(project_root: &Path, requested: &Path) -> Result<PathBuf, AppEr
     };
 
     // Ensure the resolved path stays within the project root
-    let canonical_root = project_root.canonicalize().map_err(|e| {
-        AppError::internal(format!("Failed to resolve project root: {}", e))
-    })?;
+    let canonical_root = project_root
+        .canonicalize()
+        .map_err(|e| AppError::internal(format!("Failed to resolve project root: {}", e)))?;
 
     if !canonical.starts_with(&canonical_root) {
         return Err(AppError::forbidden(format!(
@@ -301,9 +304,9 @@ pub async fn read_file(
     }
 
     // Check file size (max 10 MB)
-    let metadata = file_path.metadata().map_err(|e| {
-        AppError::internal(format!("Failed to read file metadata: {}", e))
-    })?;
+    let metadata = file_path
+        .metadata()
+        .map_err(|e| AppError::internal(format!("Failed to read file metadata: {}", e)))?;
     if metadata.len() > 10 * 1024 * 1024 {
         return Err(AppError::bad_request(format!(
             "File too large ({} bytes, max 10 MB)",
@@ -336,7 +339,9 @@ pub async fn write_file(
     let file_path = validate_path(project_root, Path::new(&request.path))?;
 
     // Enforce max file size: 10 MB
-    let max_size: usize = state.config.get("runtime.max_file_size")
+    let max_size: usize = state
+        .config
+        .get("runtime.max_file_size")
         .and_then(|v| v.as_i64())
         .unwrap_or(10 * 1024 * 1024) as usize;
     if request.content.len() > max_size {
@@ -389,9 +394,7 @@ pub async fn edit_file(
         .map_err(|e| AppError::not_found(format!("Failed to read file: {}", e)))?;
 
     if !content.contains(&request.old_string) {
-        return Err(AppError::bad_request(
-            "Search string not found in file",
-        ));
+        return Err(AppError::bad_request("Search string not found in file"));
     }
 
     let new_content = content.replacen(&request.old_string, &request.new_string, 1);
@@ -427,9 +430,9 @@ pub async fn delete_file(
     }
 
     // Safety: never delete the project root itself
-    let canonical_root = project_root.canonicalize().map_err(|e| {
-        AppError::internal(format!("Failed to resolve project root: {}", e))
-    })?;
+    let canonical_root = project_root
+        .canonicalize()
+        .map_err(|e| AppError::internal(format!("Failed to resolve project root: {}", e)))?;
     if target_path.canonicalize().ok().as_ref() == Some(&canonical_root) {
         return Err(AppError::forbidden(
             "Cannot delete the project root directory",
@@ -487,9 +490,8 @@ pub async fn search_files(
         )
     };
 
-    let result = runtime::glob_search(&pattern, None).map_err(|e| {
-        AppError::internal(format!("File search failed: {}", e))
-    })?;
+    let result = runtime::glob_search(&pattern, None)
+        .map_err(|e| AppError::internal(format!("File search failed: {}", e)))?;
 
     Ok(Json(FileSearchResponse {
         files: result.filenames,
@@ -539,9 +541,8 @@ pub async fn search_content(
         multiline: Some(false),
     };
 
-    let result = runtime::grep_search(&grep_input).map_err(|e| {
-        AppError::internal(format!("Content search failed: {}", e))
-    })?;
+    let result = runtime::grep_search(&grep_input)
+        .map_err(|e| AppError::internal(format!("Content search failed: {}", e)))?;
 
     let content = result.content.unwrap_or_default();
     let num_matches = content.lines().count();

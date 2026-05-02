@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use rusqlite::Connection;
 use runtime::{RuntimeConfig, Session};
+use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 use tracing::info;
@@ -98,13 +98,15 @@ impl AppState {
             let conn = Connection::open(&db_path)?;
 
             // Enable WAL mode and optimize settings for production
-            conn.execute_batch("
+            conn.execute_batch(
+                "
                 PRAGMA journal_mode=WAL;
                 PRAGMA synchronous=NORMAL;
                 PRAGMA cache_size=-64000;
                 PRAGMA busy_timeout=5000;
                 PRAGMA foreign_keys=ON;
-            ")?;
+            ",
+            )?;
 
             initialize_schema(&conn)?;
             Ok::<_, ServerError>(conn)
@@ -130,8 +132,8 @@ impl AppState {
     /// Save a session to the SQLite database for persistence across restarts.
     pub async fn persist_session(&self, session: &Session) -> Result<(), ServerError> {
         let session_id = session.session_id.clone();
-        let messages_json = serde_json::to_string(&session.messages)
-            .unwrap_or_else(|_| "[]".to_string());
+        let messages_json =
+            serde_json::to_string(&session.messages).unwrap_or_else(|_| "[]".to_string());
         let model = session.model.clone().unwrap_or_default();
         let created_at = chrono::DateTime::from_timestamp_millis(
             i64::try_from(session.created_at_ms).unwrap_or(0),
@@ -161,9 +163,7 @@ impl AppState {
     /// Load all persisted sessions from SQLite into the in-memory store.
     pub async fn restore_sessions(&self) -> Result<usize, ServerError> {
         let db = self.db.lock().await;
-        let mut stmt = db.prepare(
-            "SELECT id, metadata FROM sessions",
-        )?;
+        let mut stmt = db.prepare("SELECT id, metadata FROM sessions")?;
 
         let rows: Vec<(String, String)> = stmt
             .query_map([], |row| Ok((row.get(0)?, row.get(1)?)))?
@@ -189,10 +189,11 @@ impl AppState {
                 .and_then(|v| v.as_str())
                 .unwrap_or("[]");
 
-            let messages: Vec<runtime::ConversationMessage> = match serde_json::from_str(messages_str) {
-                Ok(m) => m,
-                Err(_) => continue,
-            };
+            let messages: Vec<runtime::ConversationMessage> =
+                match serde_json::from_str(messages_str) {
+                    Ok(m) => m,
+                    Err(_) => continue,
+                };
 
             let model = metadata
                 .get("model")
@@ -317,9 +318,24 @@ fn initialize_schema(conn: &Connection) -> Result<(), ServerError> {
 
     // Seed default plugins
     let default_plugins = vec![
-        ("plugin-git", "Git Integration", "Provides git repository operations and status tracking.", "1.0.0"),
-        ("plugin-npm", "NPM Integration", "Provides npm package management and script execution.", "1.0.0"),
-        ("plugin-cargo", "Cargo Integration", "Provides Rust cargo build and test operations.", "1.0.0"),
+        (
+            "plugin-git",
+            "Git Integration",
+            "Provides git repository operations and status tracking.",
+            "1.0.0",
+        ),
+        (
+            "plugin-npm",
+            "NPM Integration",
+            "Provides npm package management and script execution.",
+            "1.0.0",
+        ),
+        (
+            "plugin-cargo",
+            "Cargo Integration",
+            "Provides Rust cargo build and test operations.",
+            "1.0.0",
+        ),
     ];
 
     for (id, name, desc, version) in default_plugins {
