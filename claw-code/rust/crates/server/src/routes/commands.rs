@@ -4,7 +4,7 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::sync::LazyLock;
-use tracing::{info, warn};
+use tracing::info;
 
 use crate::middleware::error_handler::AppError;
 use crate::state::AppState;
@@ -47,15 +47,60 @@ pub fn sanitize_output(input: &str) -> String {
 /// Default allowed commands.
 static ALLOWED_COMMANDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
     [
-        "git", "npm", "cargo", "node", "python", "python3", "ls", "cat",
-        "grep", "find", "echo", "mkdir", "cp", "mv", "touch", "head",
-        "tail", "wc", "sort", "uniq", "awk", "sed", "stat", "date",
-        "whoami", "pwd", "dir", "type", "tree", "more", "less",
-        "ping", "curl", "wget", "tar", "zip", "unzip", "make", "cmake",
-        "gcc", "g++", "rustc", "go", "java", "javac", "dotnet",
+        "git",
+        "npm",
+        "cargo",
+        "node",
+        "python",
+        "python3",
+        "ls",
+        "cat",
+        "grep",
+        "find",
+        "echo",
+        "mkdir",
+        "cp",
+        "mv",
+        "touch",
+        "head",
+        "tail",
+        "wc",
+        "sort",
+        "uniq",
+        "awk",
+        "sed",
+        "stat",
+        "date",
+        "whoami",
+        "pwd",
+        "dir",
+        "type",
+        "tree",
+        "more",
+        "less",
+        "ping",
+        "curl",
+        "wget",
+        "tar",
+        "zip",
+        "unzip",
+        "make",
+        "cmake",
+        "gcc",
+        "g++",
+        "rustc",
+        "go",
+        "java",
+        "javac",
+        "dotnet",
         // Windows-specific (shell interpreters removed for security)
-        "where", "where.exe",
-        "tasklist", "ipconfig", "netstat", "nslookup", "systeminfo",
+        "where",
+        "where.exe",
+        "tasklist",
+        "ipconfig",
+        "netstat",
+        "nslookup",
+        "systeminfo",
     ]
     .into_iter()
     .collect()
@@ -64,26 +109,58 @@ static ALLOWED_COMMANDS: LazyLock<HashSet<&'static str>> = LazyLock::new(|| {
 /// Dangerous command patterns that are always blocked.
 static DANGEROUS_PATTERNS: &[&str] = &[
     // Unix dangerous
-    "rm -rf", "rm -r /", "rm --no-preserve-root",
-    "mkfs", "dd if=", "fdisk", "parted",
-    "chmod 777", "chmod -R 777",
-    ":(){:|:&};:", "fork bomb",
+    "rm -rf",
+    "rm -r /",
+    "rm --no-preserve-root",
+    "mkfs",
+    "dd if=",
+    "fdisk",
+    "parted",
+    "chmod 777",
+    "chmod -R 777",
+    ":(){:|:&};:",
+    "fork bomb",
     // PowerShell dangerous
-    "Remove-Item -Recurse -Force", "rm -Recurse -Force",
-    "del /f /s /q", "del /f", "format",
-    "shutdown", "restart-computer",
+    "Remove-Item -Recurse -Force",
+    "rm -Recurse -Force",
+    "del /f /s /q",
+    "del /f",
+    "format",
+    "shutdown",
+    "restart-computer",
     // Universal dangerous
-    "eval(", "exec(", "base64 -d", "base64 --decode",
-    "nc -e", "ncat -e", "reverse shell",
+    "eval(",
+    "exec(",
+    "base64 -d",
+    "base64 --decode",
+    "nc -e",
+    "ncat -e",
+    "reverse shell",
     "/dev/tcp/",
     // Pipe and redirect patterns (command chaining)
-    "| bash", "| sh", "| powershell", "| cmd",
-    "&& rm ", "|| rm ", "; rm ", ";rm ",
+    "| bash",
+    "| sh",
+    "| powershell",
+    "| cmd",
+    "&& rm ",
+    "|| rm ",
+    "; rm ",
+    ";rm ",
     // Network exfiltration patterns
-    "curl http", "wget http", "curl ftp", "wget ftp",
-    "curl -s", "wget -q", "curl -o", "wget -O",
+    "curl http",
+    "wget http",
+    "curl ftp",
+    "wget ftp",
+    "curl -s",
+    "wget -q",
+    "curl -o",
+    "wget -O",
     // Obfuscation patterns
-    "base64 ", "$(", "`", "eval ", "exec ",
+    "base64 ",
+    "$(",
+    "`",
+    "eval ",
+    "exec ",
 ];
 
 /// Check whether a command string contains dangerous patterns.
@@ -105,11 +182,7 @@ fn is_dangerous(full_command: &str) -> bool {
 
 /// Validate that the requested command is in the allowlist.
 pub fn validate_command(command: &str) -> Result<(), AppError> {
-    let base = command
-        .trim()
-        .split_whitespace()
-        .next()
-        .unwrap_or(command);
+    let base = command.trim().split_whitespace().next().unwrap_or(command);
 
     // Check dangerous patterns first (with whitespace normalization)
     if is_dangerous(command) {
@@ -221,11 +294,7 @@ pub async fn execute_command(
     let full_command = if request.args.is_empty() {
         request.command.clone()
     } else {
-        format!(
-            "{} {}",
-            request.command,
-            request.args.join(" ")
-        )
+        format!("{} {}", request.command, request.args.join(" "))
     };
 
     // Security validation

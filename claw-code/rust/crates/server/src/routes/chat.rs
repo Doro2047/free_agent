@@ -11,10 +11,9 @@ use runtime::{
     PermissionOutcome, PermissionPolicy, Session,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use tokio::sync::Mutex;
 use tokio_stream::wrappers::ReceiverStream;
-use tracing::{error, info, warn};
+use tracing::{info, warn};
 
 use crate::llm_client::{DynamicModelLlmClient, LlmClientConfig};
 use crate::middleware::error_handler::AppError;
@@ -150,9 +149,7 @@ impl ServerToolExecutor {
         };
 
         if !canonical_resolved.starts_with(&canonical_work_dir) {
-            return Err(format!(
-                "path '{path}' resolves outside of work directory"
-            ));
+            return Err(format!("path '{path}' resolves outside of work directory"));
         }
 
         Ok(canonical_resolved)
@@ -220,8 +217,7 @@ impl ServerToolExecutor {
             serde_json::from_str(input).map_err(|e| format!("invalid JSON: {e}"))?;
 
         // Validate command against allowlist before execution
-        validate_command(&parsed.command)
-            .map_err(|e| e.to_string())?;
+        validate_command(&parsed.command).map_err(|e| e.to_string())?;
 
         // Use .current_dir() instead of std::env::set_current_dir() to avoid race conditions
         // with concurrent requests changing the process-wide working directory
@@ -234,20 +230,20 @@ impl ServerToolExecutor {
         cmd.current_dir(&self.work_dir);
 
         let output = cmd.output().map_err(|e| format!("bash failed: {e}"))?;
-        
+
         let raw_stdout = String::from_utf8_lossy(&output.stdout);
         let raw_stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Sanitize sensitive information from output
         let sanitized_stdout = crate::routes::commands::sanitize_output(&raw_stdout);
         let sanitized_stderr = crate::routes::commands::sanitize_output(&raw_stderr);
-        
+
         let result = serde_json::json!({
             "stdout": sanitized_stdout,
             "stderr": sanitized_stderr,
             "interrupted": false,
         });
-        
+
         serde_json::to_string(&result).map_err(|e| format!("serialization error: {e}"))
     }
 
@@ -351,7 +347,8 @@ impl ChatEngine {
         mut on_token: impl FnMut(&str),
         mut on_tool_use: impl FnMut(&str, &str, &str),
     ) -> Result<(String, bool), AppError> {
-        let (response_id, events) = self.llm_client
+        let (response_id, events) = self
+            .llm_client
             .stream_with_model(
                 ApiRequest {
                     system_prompt: self.system_prompt.clone(),
@@ -374,9 +371,15 @@ impl ChatEngine {
                 }
                 AssistantEvent::ToolUse { id, name, input } => {
                     if !text_buf.is_empty() {
-                        blocks.push(ContentBlock::Text { text: std::mem::take(&mut text_buf) });
+                        blocks.push(ContentBlock::Text {
+                            text: std::mem::take(&mut text_buf),
+                        });
                     }
-                    blocks.push(ContentBlock::ToolUse { id: id.clone(), name: name.clone(), input: input.clone() });
+                    blocks.push(ContentBlock::ToolUse {
+                        id: id.clone(),
+                        name: name.clone(),
+                        input: input.clone(),
+                    });
                     has_tool_calls = true;
 
                     on_tool_use(&id, &name, &input);
@@ -386,21 +389,27 @@ impl ChatEngine {
                         PermissionOutcome::Allow => {
                             match self.tool_executor.execute(&name, &input) {
                                 Ok(output) => {
-                                    session.push_message(
-                                        ConversationMessage::tool_result(id, name, output, false)
-                                    ).ok();
+                                    session
+                                        .push_message(ConversationMessage::tool_result(
+                                            id, name, output, false,
+                                        ))
+                                        .ok();
                                 }
                                 Err(e) => {
-                                    session.push_message(
-                                        ConversationMessage::tool_result(id, name, e, true)
-                                    ).ok();
+                                    session
+                                        .push_message(ConversationMessage::tool_result(
+                                            id, name, e, true,
+                                        ))
+                                        .ok();
                                 }
                             }
                         }
                         PermissionOutcome::Deny { reason } => {
-                            session.push_message(
-                                ConversationMessage::tool_result(id, name, reason, true)
-                            ).ok();
+                            session
+                                .push_message(ConversationMessage::tool_result(
+                                    id, name, reason, true,
+                                ))
+                                .ok();
                         }
                     }
                 }
@@ -415,11 +424,15 @@ impl ChatEngine {
         }
 
         if !text_buf.is_empty() {
-            blocks.push(ContentBlock::Text { text: std::mem::take(&mut text_buf) });
+            blocks.push(ContentBlock::Text {
+                text: std::mem::take(&mut text_buf),
+            });
         }
 
         if !blocks.is_empty() {
-            session.push_message(ConversationMessage::assistant(blocks)).ok();
+            session
+                .push_message(ConversationMessage::assistant(blocks))
+                .ok();
         }
 
         Ok((response_id, has_tool_calls))
@@ -436,12 +449,9 @@ impl ChatEngine {
         let mut response_id = String::new();
 
         for _ in 0..self.max_iterations {
-            let (rid, has_tool_calls) = self.run_turn(
-                session,
-                &mut total_usage,
-                &mut on_token,
-                &mut on_tool_use,
-            ).await?;
+            let (rid, has_tool_calls) = self
+                .run_turn(session, &mut total_usage, &mut on_token, &mut on_tool_use)
+                .await?;
             response_id = rid;
 
             if !has_tool_calls {
@@ -481,19 +491,27 @@ pub async fn send_message(
     let session_id = session.session_id.clone();
 
     let mut session = session;
-    session.push_user_text(request.message.clone())
+    session
+        .push_user_text(request.message.clone())
         .map_err(|e| AppError::internal(format!("Failed to push user message: {e}")))?;
 
     let mut engine = ChatEngine::new(llm_client, tool_executor, model);
     let mut response_text = String::new();
 
-    let (response_id, usage) = engine.run_full(
-        &mut session,
-        |delta| { response_text.push_str(delta); },
-        |_, _, _| {},
-    ).await?;
+    let (response_id, usage) = engine
+        .run_full(
+            &mut session,
+            |delta| {
+                response_text.push_str(delta);
+            },
+            |_, _, _| {},
+        )
+        .await?;
 
-    let total = usage.input_tokens + usage.output_tokens + usage.cache_creation_input_tokens + usage.cache_read_input_tokens;
+    let total = usage.input_tokens
+        + usage.output_tokens
+        + usage.cache_creation_input_tokens
+        + usage.cache_read_input_tokens;
 
     Ok(Json(ChatResponse {
         id: response_id,
@@ -536,7 +554,10 @@ pub async fn stream_message(
     tokio::spawn(async move {
         let mut session = session;
         if let Err(e) = session.push_user_text(user_input.clone()) {
-            let _ = tx.lock().unwrap().blocking_send(Ok(Event::default().data(format!("{{\"error\":\"{e}\"}}"))));
+            let _ = tx
+                .lock()
+                .unwrap()
+                .blocking_send(Ok(Event::default().data(format!("{{\"error\":\"{e}\"}}"))));
             return;
         }
 
@@ -549,30 +570,41 @@ pub async fn stream_message(
 
         let mut response_id = String::new();
         let mut total_usage = ConversationUsage::default();
-        let mut max_iterations = engine.max_iterations;
+        let max_iterations = engine.max_iterations;
 
         for _ in 0..max_iterations {
-            match engine.run_turn(
-                &mut session,
-                &mut total_usage,
-                |delta| {
-                    let data = serde_json::to_string(&StreamTokenEvent {
-                        event_type: "token".into(),
-                        delta: delta.to_string(),
-                        session_id: session_id.clone(),
-                    }).unwrap_or_default();
-                    let _ = tx.lock().unwrap().blocking_send(Ok(Event::default().data(data)));
-                },
-                |id, name, _input| {
-                    let data = serde_json::to_string(&StreamToolUseEvent {
-                        event_type: "tool_use".into(),
-                        tool_id: id.to_string(),
-                        tool_name: name.to_string(),
-                        session_id: session_id.clone(),
-                    }).unwrap_or_default();
-                    let _ = tx.lock().unwrap().blocking_send(Ok(Event::default().data(data)));
-                },
-            ).await {
+            match engine
+                .run_turn(
+                    &mut session,
+                    &mut total_usage,
+                    |delta| {
+                        let data = serde_json::to_string(&StreamTokenEvent {
+                            event_type: "token".into(),
+                            delta: delta.to_string(),
+                            session_id: session_id.clone(),
+                        })
+                        .unwrap_or_default();
+                        let _ = tx
+                            .lock()
+                            .unwrap()
+                            .blocking_send(Ok(Event::default().data(data)));
+                    },
+                    |id, name, _input| {
+                        let data = serde_json::to_string(&StreamToolUseEvent {
+                            event_type: "tool_use".into(),
+                            tool_id: id.to_string(),
+                            tool_name: name.to_string(),
+                            session_id: session_id.clone(),
+                        })
+                        .unwrap_or_default();
+                        let _ = tx
+                            .lock()
+                            .unwrap()
+                            .blocking_send(Ok(Event::default().data(data)));
+                    },
+                )
+                .await
+            {
                 Ok((rid, has_tool_calls)) => {
                     response_id = rid;
                     if !has_tool_calls {
@@ -587,8 +619,10 @@ pub async fn stream_message(
         }
 
         // Send final usage stats
-        let total = total_usage.input_tokens + total_usage.output_tokens + 
-                    total_usage.cache_creation_input_tokens + total_usage.cache_read_input_tokens;
+        let total = total_usage.input_tokens
+            + total_usage.output_tokens
+            + total_usage.cache_creation_input_tokens
+            + total_usage.cache_read_input_tokens;
         let data = serde_json::to_string(&StreamUsageEvent {
             event_type: "usage".into(),
             input_tokens: total_usage.input_tokens,
@@ -597,8 +631,12 @@ pub async fn stream_message(
             cache_read_input_tokens: total_usage.cache_read_input_tokens,
             total_tokens: total,
             session_id: session_id.clone(),
-        }).unwrap_or_default();
-        let _ = tx.lock().unwrap().blocking_send(Ok(Event::default().data(data)));
+        })
+        .unwrap_or_default();
+        let _ = tx
+            .lock()
+            .unwrap()
+            .blocking_send(Ok(Event::default().data(data)));
 
         // Save session to in-memory store
         let mut map = sessions.lock().await;
@@ -614,19 +652,22 @@ pub async fn stream_message(
             event_type: "done".into(),
             response_id,
             session_id: session_id.clone(),
-        }).unwrap_or_default();
-        let _ = tx.lock().unwrap().blocking_send(Ok(Event::default().data(data)));
+        })
+        .unwrap_or_default();
+        let _ = tx
+            .lock()
+            .unwrap()
+            .blocking_send(Ok(Event::default().data(data)));
     });
 
     let event_stream = ReceiverStream::new(rx);
 
-    Ok(Sse::new(event_stream).keep_alive(KeepAlive::new().interval(std::time::Duration::from_secs(15))))
+    Ok(Sse::new(event_stream)
+        .keep_alive(KeepAlive::new().interval(std::time::Duration::from_secs(15))))
 }
 
 #[axum::debug_handler]
-pub async fn list_sessions(
-    State(app_state): State<AppState>,
-) -> Json<serde_json::Value> {
+pub async fn list_sessions(State(app_state): State<AppState>) -> Json<serde_json::Value> {
     let sessions = app_state.sessions.lock().await;
     let session_list: Vec<serde_json::Value> = sessions
         .values()

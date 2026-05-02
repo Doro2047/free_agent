@@ -16,9 +16,7 @@ use crate::routes::commands::validate_command;
 use crate::state::{AppState, WsEvent, WsEventType};
 
 lazy_static! {
-    static ref EXPECTED_WS_API_KEY: String = {
-        std::env::var("DORO_API_KEY").unwrap_or_default()
-    };
+    static ref EXPECTED_WS_API_KEY: String = std::env::var("DORO_API_KEY").unwrap_or_default() ;
 }
 
 // ============================================================================
@@ -51,11 +49,14 @@ impl ConnectionManager {
 
     pub fn add_connection(&mut self, connection_id: String, remote_addr: String) {
         let connection_id_for_log = connection_id.clone();
-        self.connections.insert(connection_id, ConnectionInfo {
-            connected_at: chrono::Utc::now().to_rfc3339(),
-            remote_addr,
-            message_count: 0,
-        });
+        self.connections.insert(
+            connection_id,
+            ConnectionInfo {
+                connected_at: chrono::Utc::now().to_rfc3339(),
+                remote_addr,
+                message_count: 0,
+            },
+        );
         info!(
             connection_id = %connection_id_for_log,
             total_connections = self.connections.len(),
@@ -151,7 +152,10 @@ impl WsOutgoingMessage {
         }
     }
 
-    pub fn success(msg_type: impl Into<String>, data: impl Into<Option<serde_json::Value>>) -> Self {
+    pub fn success(
+        msg_type: impl Into<String>,
+        data: impl Into<Option<serde_json::Value>>,
+    ) -> Self {
         Self {
             msg_type: msg_type.into(),
             data: data.into(),
@@ -162,7 +166,10 @@ impl WsOutgoingMessage {
     /// Serialize to a JSON string for WebSocket transmission.
     pub fn to_json_string(&self) -> String {
         serde_json::to_string(self).unwrap_or_else(|e| {
-            format!(r#"{{"type":"error","error":"serialization failed: {}"}}"#, e)
+            format!(
+                r#"{{"type":"error","error":"serialization failed: {}"}}"#,
+                e
+            )
         })
     }
 }
@@ -257,11 +264,19 @@ pub async fn ws_connection(socket: WebSocket, state: AppState) {
                     // Only forward events to subscribed connections
                     // For simplicity, broadcast to all connections
                     let outgoing = WsOutgoingMessage::success(
-                        format!("event:{}", serde_json::to_string(&event.event_type).unwrap_or_default().trim_matches('"')),
+                        format!(
+                            "event:{}",
+                            serde_json::to_string(&event.event_type)
+                                .unwrap_or_default()
+                                .trim_matches('"')
+                        ),
                         Some(event.data),
                     );
                     let mut sender = ws_sender_clone.lock().await;
-                    if let Err(e) = sender.send(Message::Text(outgoing.to_json_string().into())).await {
+                    if let Err(e) = sender
+                        .send(Message::Text(outgoing.to_json_string().into()))
+                        .await
+                    {
                         warn!(error = %e, connection_id = %conn_id_clone, "Failed to send event to client");
                         break;
                     }
@@ -291,7 +306,10 @@ pub async fn ws_connection(socket: WebSocket, state: AppState) {
                 match process_message(&message, &state).await {
                     Some(response) => {
                         let mut sender = ws_sender.lock().await;
-                        if let Err(e) = sender.send(Message::Text(response.to_json_string().into())).await {
+                        if let Err(e) = sender
+                            .send(Message::Text(response.to_json_string().into()))
+                            .await
+                        {
                             warn!(error = %e, connection_id = %connection_id, "Failed to send response to client");
                             break;
                         }
@@ -333,37 +351,55 @@ async fn process_message(message: &Message, state: &AppState) -> Option<WsOutgoi
             let parsed: WsIncomingMessage = match serde_json::from_str(text) {
                 Ok(msg) => msg,
                 Err(e) => {
-                    return Some(WsOutgoingMessage::error(format!("Invalid JSON message: {}", e)));
+                    return Some(WsOutgoingMessage::error(format!(
+                        "Invalid JSON message: {}",
+                        e
+                    )));
                 }
             };
 
             match parsed {
-                WsIncomingMessage::Command { command, args, cwd, id } => {
+                WsIncomingMessage::Command {
+                    command,
+                    args,
+                    cwd,
+                    id,
+                } => {
                     // Execute command in background and stream output
                     handle_command(state.clone(), command, args, cwd, id).await;
                     None // Response is streamed asynchronously
                 }
-                WsIncomingMessage::Chat { message, session_id, model } => {
+                WsIncomingMessage::Chat {
+                    message,
+                    session_id,
+                    model,
+                } => {
                     // Process chat in background and stream response
                     handle_chat(state.clone(), message, session_id, model).await;
                     None // Response is streamed asynchronously
                 }
                 WsIncomingMessage::Subscribe { events } => {
                     info!(events = ?events, "Client subscribed to events");
-                    Some(WsOutgoingMessage::success("subscribed", Some(serde_json::json!({
-                        "events": events
-                    }))))
+                    Some(WsOutgoingMessage::success(
+                        "subscribed",
+                        Some(serde_json::json!({
+                            "events": events
+                        })),
+                    ))
                 }
-                WsIncomingMessage::Ping => {
-                    Some(WsOutgoingMessage::success("pong", Some(serde_json::json!({
+                WsIncomingMessage::Ping => Some(WsOutgoingMessage::success(
+                    "pong",
+                    Some(serde_json::json!({
                         "timestamp": chrono::Utc::now().to_rfc3339()
-                    }))))
-                }
+                    })),
+                )),
             }
         }
         Message::Binary(data) => {
             warn!("Received binary WebSocket message ({} bytes)", data.len());
-            Some(WsOutgoingMessage::error("Binary messages are not supported"))
+            Some(WsOutgoingMessage::error(
+                "Binary messages are not supported",
+            ))
         }
         Message::Close(close_frame) => {
             let reason = close_frame
@@ -373,13 +409,11 @@ async fn process_message(message: &Message, state: &AppState) -> Option<WsOutgoi
             info!(reason = %reason, "WebSocket close frame received");
             None
         }
-        Message::Ping(data) => {
+        Message::Ping(_data) => {
             // axum handles Pong responses automatically for Ping messages
             None
         }
-        Message::Pong(_) => {
-            None
-        }
+        Message::Pong(_) => None,
     }
 }
 
@@ -578,9 +612,9 @@ async fn handle_chat(
     use crate::llm_client::{DynamicModelLlmClient, LlmClientConfig};
     use crate::routes::chat::ServerToolExecutor;
     use runtime::{
-    ApiRequest, AssistantEvent, ContentBlock, ConversationMessage, PermissionMode,
-    PermissionOutcome, PermissionPolicy, Session, TokenUsage,
-};
+        ApiRequest, AssistantEvent, ContentBlock, ConversationMessage, PermissionMode,
+        PermissionOutcome, PermissionPolicy, TokenUsage,
+    };
 
     let tx = state.ws_tx.clone();
 
@@ -681,7 +715,8 @@ async fn handle_chat(
                             AssistantEvent::Usage(u) => {
                                 turn_usage.input_tokens += u.input_tokens;
                                 turn_usage.output_tokens += u.output_tokens;
-                                turn_usage.cache_creation_input_tokens += u.cache_creation_input_tokens;
+                                turn_usage.cache_creation_input_tokens +=
+                                    u.cache_creation_input_tokens;
                                 turn_usage.cache_read_input_tokens += u.cache_read_input_tokens;
                             }
                             AssistantEvent::MessageStop => {}
@@ -697,7 +732,8 @@ async fn handle_chat(
                     // Update total usage
                     total_usage.input_tokens += turn_usage.input_tokens;
                     total_usage.output_tokens += turn_usage.output_tokens;
-                    total_usage.cache_creation_input_tokens += turn_usage.cache_creation_input_tokens;
+                    total_usage.cache_creation_input_tokens +=
+                        turn_usage.cache_creation_input_tokens;
                     total_usage.cache_read_input_tokens += turn_usage.cache_read_input_tokens;
 
                     // Build assistant message
@@ -738,7 +774,8 @@ async fn handle_chat(
 
                     // Execute tools
                     for (tool_use_id, tool_name, input) in pending_tool_uses {
-                        let permission_outcome = permission_policy.authorize(&tool_name, &input, None);
+                        let permission_outcome =
+                            permission_policy.authorize(&tool_name, &input, None);
 
                         let result_message = match permission_outcome {
                             PermissionOutcome::Allow => {
@@ -748,14 +785,18 @@ async fn handle_chat(
                                         Err(e) => (e.to_string(), true),
                                     };
                                 ConversationMessage::tool_result(
-                                    tool_use_id, tool_name, output, is_error,
+                                    tool_use_id,
+                                    tool_name,
+                                    output,
+                                    is_error,
                                 )
                             }
-                            PermissionOutcome::Deny { reason } => {
-                                ConversationMessage::tool_result(
-                                    tool_use_id, tool_name, reason, true,
-                                )
-                            }
+                            PermissionOutcome::Deny { reason } => ConversationMessage::tool_result(
+                                tool_use_id,
+                                tool_name,
+                                reason,
+                                true,
+                            ),
                         };
 
                         if let Err(e) = session.push_message(result_message) {
@@ -788,9 +829,11 @@ async fn handle_chat(
 ///
 /// For simplicity, we create a thread-local connection manager. In production
 /// this should be part of AppState.
-async fn get_or_init_connection_manager(state: &AppState) -> SharedConnectionManager {
+async fn get_or_init_connection_manager(_state: &AppState) -> SharedConnectionManager {
     // In a production system, this would be stored in AppState.
     // For now, we create a per-handler instance.
     static MANAGER: std::sync::OnceLock<Arc<Mutex<ConnectionManager>>> = std::sync::OnceLock::new();
-    MANAGER.get_or_init(|| Arc::new(Mutex::new(ConnectionManager::new()))).clone()
+    MANAGER
+        .get_or_init(|| Arc::new(Mutex::new(ConnectionManager::new())))
+        .clone()
 }

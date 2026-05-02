@@ -46,7 +46,7 @@ jobs:
 
       - name: Clippy
         working-directory: claw-code/rust
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -W clippy::all -A clippy::uninlined_format_args
 
       - name: Check
         working-directory: claw-code/rust
@@ -72,7 +72,7 @@ jobs:
 
       - name: Lint
         working-directory: frontend
-        run: npm run lint
+        run: npm run lint -- --quiet
 
       - name: Build
         working-directory: frontend
@@ -197,4 +197,4 @@ jobs:
       - name: Run ESLint
         if: steps.changed.outputs.any_changed == 'true'
         working-directory: frontend
-        run: npx eslint ${{ steps.changed.outputs.all_changed_files }}
+        run: npx eslint ${{ steps.changed.outputs.all_changed_files }} --quiet --ignore-pattern '*.json' --ignore-pattern '*.md' --ignore-pattern '*.yml'

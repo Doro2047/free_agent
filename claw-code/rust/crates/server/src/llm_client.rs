@@ -8,8 +8,7 @@
 use std::sync::Arc;
 
 use api::{
-    ContentBlockDelta, InputContentBlock, InputMessage, MessageRequest, StreamEvent, ToolChoice,
-    ToolDefinition,
+    ContentBlockDelta, InputContentBlock, InputMessage, MessageRequest, StreamEvent,
 };
 use api::{OpenAiCompatClient, OpenAiCompatConfig};
 use runtime::{ApiClient, ApiRequest, AssistantEvent, RuntimeError, TokenUsage};
@@ -41,7 +40,8 @@ impl Default for LlmClientConfig {
             base_url: std::env::var("LLAMA_CPP_BASE_URL")
                 .unwrap_or_else(|_| DEFAULT_LLAMA_CPP_BASE_URL.to_string()),
             api_key: std::env::var("LLAMA_CPP_API_KEY").unwrap_or_default(),
-            default_model: std::env::var("LLAMA_CPP_MODEL").unwrap_or_else(|_| "default".to_string()),
+            default_model: std::env::var("LLAMA_CPP_MODEL")
+                .unwrap_or_else(|_| "default".to_string()),
             max_tokens: 4096,
             temperature: None,
         }
@@ -68,8 +68,8 @@ impl LlmClient {
             max_request_body_bytes: 104_857_600,
         };
 
-        let client = OpenAiCompatClient::new(&config.api_key, api_config)
-            .with_base_url(&config.base_url);
+        let client =
+            OpenAiCompatClient::new(&config.api_key, api_config).with_base_url(&config.base_url);
 
         Self {
             inner: Arc::new(Mutex::new(client)),
@@ -83,11 +83,7 @@ impl LlmClient {
     }
 
     /// Convert runtime ApiRequest to api MessageRequest.
-    fn build_message_request(
-        &self,
-        api_request: &ApiRequest,
-        model: &str,
-    ) -> MessageRequest {
+    fn build_message_request(&self, api_request: &ApiRequest, model: &str) -> MessageRequest {
         // Build system prompt by joining sections
         let system_prompt = if api_request.system_prompt.is_empty() {
             None
@@ -167,25 +163,23 @@ impl LlmClient {
                 ContentBlockDelta::InputJsonDelta { partial_json } => {
                     Some(AssistantEvent::TextDelta(partial_json.clone()))
                 }
-                ContentBlockDelta::ThinkingDelta { thinking } => {
-                    Some(AssistantEvent::TextDelta(format!("<thinking>{thinking}</thinking>")))
-                }
-                ContentBlockDelta::SignatureDelta { signature } => {
-                    Some(AssistantEvent::TextDelta(format!("<signature>{signature}</signature>")))
-                }
+                ContentBlockDelta::ThinkingDelta { thinking } => Some(AssistantEvent::TextDelta(
+                    format!("<thinking>{thinking}</thinking>"),
+                )),
+                ContentBlockDelta::SignatureDelta { signature } => Some(AssistantEvent::TextDelta(
+                    format!("<signature>{signature}</signature>"),
+                )),
             },
-            StreamEvent::ContentBlockStart(start_event) => {
-                match &start_event.content_block {
-                    api::OutputContentBlock::ToolUse { id, name, input } => {
-                        Some(AssistantEvent::ToolUse {
-                            id: id.clone(),
-                            name: name.clone(),
-                            input: serde_json::to_string(&input).unwrap_or_else(|_| "{}".to_string()),
-                        })
-                    }
-                    _ => None,
+            StreamEvent::ContentBlockStart(start_event) => match &start_event.content_block {
+                api::OutputContentBlock::ToolUse { id, name, input } => {
+                    Some(AssistantEvent::ToolUse {
+                        id: id.clone(),
+                        name: name.clone(),
+                        input: serde_json::to_string(&input).unwrap_or_else(|_| "{}".to_string()),
+                    })
                 }
-            }
+                _ => None,
+            },
             StreamEvent::MessageDelta(delta_event) => {
                 if delta_event.usage.input_tokens > 0 || delta_event.usage.output_tokens > 0 {
                     Some(AssistantEvent::Usage(TokenUsage {
@@ -219,7 +213,7 @@ impl LlmClient {
             "Sending request to llama.cpp"
         );
 
-        let mut client_guard = self.inner.lock().await;
+        let client_guard = self.inner.lock().await;
         let mut stream = client_guard
             .stream_message(&message_request)
             .await
@@ -266,7 +260,7 @@ impl LlmClient {
             .map_err(|e| RuntimeError::new(format!("Failed to create tokio runtime: {e}")))?;
 
         let events = rt.block_on(async {
-            let mut client_guard = client.lock().await;
+            let client_guard = client.lock().await;
             let mut stream = match client_guard.stream_message(&message_request).await {
                 Ok(stream) => stream,
                 Err(e) => return Err(RuntimeError::new(format!("Failed to start stream: {e}"))),
@@ -320,8 +314,8 @@ impl DynamicModelLlmClient {
             max_request_body_bytes: 104_857_600,
         };
 
-        let client = OpenAiCompatClient::new(&config.api_key, api_config)
-            .with_base_url(&config.base_url);
+        let client =
+            OpenAiCompatClient::new(&config.api_key, api_config).with_base_url(&config.base_url);
 
         Self {
             base_client: Arc::new(Mutex::new(client)),
@@ -335,11 +329,7 @@ impl DynamicModelLlmClient {
     }
 
     /// Build a MessageRequest for a specific model.
-    fn build_message_request(
-        &self,
-        api_request: &ApiRequest,
-        model: &str,
-    ) -> MessageRequest {
+    fn build_message_request(&self, api_request: &ApiRequest, model: &str) -> MessageRequest {
         let system_prompt = if api_request.system_prompt.is_empty() {
             None
         } else {
@@ -417,25 +407,23 @@ impl DynamicModelLlmClient {
                 ContentBlockDelta::InputJsonDelta { partial_json } => {
                     Some(AssistantEvent::TextDelta(partial_json.clone()))
                 }
-                ContentBlockDelta::ThinkingDelta { thinking } => {
-                    Some(AssistantEvent::TextDelta(format!("<thinking>{thinking}</thinking>")))
-                }
-                ContentBlockDelta::SignatureDelta { signature } => {
-                    Some(AssistantEvent::TextDelta(format!("<signature>{signature}</signature>")))
-                }
+                ContentBlockDelta::ThinkingDelta { thinking } => Some(AssistantEvent::TextDelta(
+                    format!("<thinking>{thinking}</thinking>"),
+                )),
+                ContentBlockDelta::SignatureDelta { signature } => Some(AssistantEvent::TextDelta(
+                    format!("<signature>{signature}</signature>"),
+                )),
             },
-            StreamEvent::ContentBlockStart(start_event) => {
-                match &start_event.content_block {
-                    api::OutputContentBlock::ToolUse { id, name, input } => {
-                        Some(AssistantEvent::ToolUse {
-                            id: id.clone(),
-                            name: name.clone(),
-                            input: serde_json::to_string(&input).unwrap_or_else(|_| "{}".to_string()),
-                        })
-                    }
-                    _ => None,
+            StreamEvent::ContentBlockStart(start_event) => match &start_event.content_block {
+                api::OutputContentBlock::ToolUse { id, name, input } => {
+                    Some(AssistantEvent::ToolUse {
+                        id: id.clone(),
+                        name: name.clone(),
+                        input: serde_json::to_string(&input).unwrap_or_else(|_| "{}".to_string()),
+                    })
                 }
-            }
+                _ => None,
+            },
             StreamEvent::MessageDelta(delta_event) => {
                 if delta_event.usage.input_tokens > 0 || delta_event.usage.output_tokens > 0 {
                     Some(AssistantEvent::Usage(TokenUsage {
@@ -469,7 +457,7 @@ impl DynamicModelLlmClient {
         );
 
         let mut stream = {
-            let mut client_guard = self.base_client.lock().await;
+            let client_guard = self.base_client.lock().await;
             client_guard
                 .stream_message(&message_request)
                 .await
@@ -515,8 +503,8 @@ impl DynamicModelLlmClient {
     ) -> Result<impl futures::Stream<Item = Result<String, RuntimeError>>, RuntimeError> {
         let message_request = self.build_message_request(&request, model);
 
-        let mut stream = {
-            let mut client_guard = self.base_client.lock().await;
+        let stream = {
+            let client_guard = self.base_client.lock().await;
             client_guard
                 .stream_message(&message_request)
                 .await
@@ -547,7 +535,8 @@ impl DynamicModelLlmClient {
                                     }
                                 }
                                 StreamEvent::MessageDelta(delta) => {
-                                    if delta.usage.input_tokens > 0 || delta.usage.output_tokens > 0 {
+                                    if delta.usage.input_tokens > 0 || delta.usage.output_tokens > 0
+                                    {
                                         let payload = serde_json::json!({
                                             "usage": {
                                                 "input_tokens": delta.usage.input_tokens,
@@ -576,10 +565,7 @@ impl DynamicModelLlmClient {
                         }
                         Ok(None) => {
                             done = true;
-                            return Some((
-                                Ok("data: [DONE]\n\n".to_string()),
-                                (stream, true),
-                            ));
+                            return Some((Ok("data: [DONE]\n\n".to_string()), (stream, true)));
                         }
                         Err(e) => {
                             done = true;
