@@ -34,7 +34,7 @@ export interface FocusTrapProps {
 export class FocusTrap extends React.Component<FocusTrapProps> {
   private containerRef: React.RefObject<HTMLDivElement>;
   private previouslyFocused: HTMLElement | null;
-  private focusableElements: string[] = [
+  private focusableElements: string = [
     'button:not([disabled])',
     'a[href]',
     'input:not([disabled])',
@@ -257,7 +257,7 @@ export function useFocusTrap({
   isActive,
   onEscape,
   initialFocusRef,
-  finalFocusRef,
+  finalFocusRef: _finalFocusRef,
 }: UseFocusTrapOptions) {
   const containerRef = useRef<HTMLDivElement>(null);
   const previousActiveElement = useRef<HTMLElement | null>(null);
