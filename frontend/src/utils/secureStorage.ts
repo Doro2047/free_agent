@@ -8,10 +8,8 @@ export interface SecureStorageResult {
 }
 
 class SecureStorageService {
-  private isAvailable: boolean;
-
-  constructor() {
-    this.isAvailable = isElectron();
+  private get isAvailable(): boolean {
+    return isElectron();
   }
 
   async isEncryptionAvailable(): Promise<boolean> {
@@ -87,7 +85,7 @@ export class SensitiveDataManager {
 
   static isSensitiveKey(key: string): boolean {
     const lowerKey = key.toLowerCase();
-    return this.SENSITIVE_KEYS.some((sensitive) => lowerKey.includes(sensitive));
+    return this.SENSITIVE_KEYS.some((sensitive) => lowerKey.includes(sensitive.toLowerCase()));
   }
 
   static async saveWithProtection(key: string, value: string): Promise<boolean> {

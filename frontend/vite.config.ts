@@ -32,4 +32,12 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  test: {
+    environment: 'happy-dom',
+    globals: true,
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: ['node_modules/', 'dist/', 'src/stories/', 'e2e/'],
+    },
+  },
 });
