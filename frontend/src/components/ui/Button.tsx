@@ -1,7 +1,7 @@
 import React, { forwardRef, useState, useRef, useEffect, useCallback, ReactNode, MouseEvent, KeyboardEvent } from 'react';
 
 export type ButtonVariant = 'solid' | 'outline' | 'ghost' | 'link';
-export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+export type ButtonSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'icon';
 export type ButtonColor = 'primary' | 'secondary' | 'success' | 'warning' | 'error' | 'info';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -42,6 +42,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
     md: { padding: '0.5rem 1rem', fontSize: '1rem', height: '2.5rem' },
     lg: { padding: '0.625rem 1.25rem', fontSize: '1.125rem', height: '3rem' },
     xl: { padding: '0.75rem 1.5rem', fontSize: '1.25rem', height: '3.5rem' },
+    icon: { padding: '0.5rem', fontSize: '1rem', height: '2rem', width: '2rem' },
   };
 
   const colorStyles: Record<ButtonColor, { bg: string; bgHover: string; bgActive: string; text: string; border?: string }> = {
