@@ -284,7 +284,7 @@ export function useWebVitals(options: UseWebVitalsOptions = {}): void {
     const measureINP = () => {
       try {
         let inpValue = 0;
-        let prevLatency = 0;
+        const prevLatency = 0;
 
         const observer = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
