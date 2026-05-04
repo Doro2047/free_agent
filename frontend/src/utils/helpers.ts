@@ -407,3 +407,69 @@ export function memoize<T extends (...args: unknown[]) => unknown>(fn: T): T {
     return result;
   }) as T;
 }
+
+const LANGUAGE_MAP: Record<string, string> = {
+  '.js': 'javascript',
+  '.jsx': 'javascript',
+  '.ts': 'typescript',
+  '.tsx': 'typescript',
+  '.py': 'python',
+  '.rb': 'ruby',
+  '.go': 'go',
+  '.rs': 'rust',
+  '.java': 'java',
+  '.c': 'c',
+  '.cpp': 'cpp',
+  '.h': 'c',
+  '.hpp': 'cpp',
+  '.cs': 'csharp',
+  '.php': 'php',
+  '.swift': 'swift',
+  '.kt': 'kotlin',
+  '.scala': 'scala',
+  '.r': 'r',
+  '.sql': 'sql',
+  '.html': 'html',
+  '.htm': 'html',
+  '.css': 'css',
+  '.scss': 'scss',
+  '.sass': 'sass',
+  '.less': 'less',
+  '.json': 'json',
+  '.xml': 'xml',
+  '.yaml': 'yaml',
+  '.yml': 'yaml',
+  '.md': 'markdown',
+  '.markdown': 'markdown',
+  '.sh': 'shell',
+  '.bash': 'shell',
+  '.zsh': 'shell',
+  '.ps1': 'powershell',
+  '.bat': 'bat',
+  '.cmd': 'bat',
+  '.dockerfile': 'dockerfile',
+  '.vue': 'vue',
+  '.svelte': 'html',
+  '.graphql': 'graphql',
+  '.gql': 'graphql',
+  '.toml': 'toml',
+  '.ini': 'ini',
+  '.conf': 'ini',
+  '.cfg': 'ini',
+  '.env': 'shell',
+  '.gitignore': 'shell',
+  '.eslintrc': 'json',
+  '.prettierrc': 'json',
+};
+
+export function getLanguageFromPath(filePath: string | null | undefined): string {
+  if (!filePath) return 'plaintext';
+  
+  const ext = filePath.match(/\.[^.]+$/)?.[0]?.toLowerCase() || '';
+  return LANGUAGE_MAP[ext] || 'plaintext';
+}
+
+export function getFileNameFromPath(filePath: string): string {
+  if (!filePath) return '';
+  return filePath.split(/[/\\]/).pop() || filePath;
+}

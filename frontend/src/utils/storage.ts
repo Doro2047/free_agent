@@ -81,7 +81,7 @@ class SafeStorage {
 
 export const safeStorage = new SafeStorage();
 
-export const appStorage = new SafeStorage('free-agent');
+export const appStorage = new SafeStorage('codecraft');
 
 export interface CacheEntry<T> {
   value: T;

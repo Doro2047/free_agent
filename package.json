@@ -1,9 +1,9 @@
 {
-  "name": "free-agent",
+  "name": "codecraft",
   "version": "0.1.0",
   "private": true,
-  "description": "FREE Agent - AI Programming Assistant Desktop Application",
-  "author": "FREE Agent Contributors",
+  "description": "CodeCraft - AI Programming Assistant Desktop Application",
+  "author": "CodeCraft Contributors",
   "license": "MIT",
   "workspaces": [
     "frontend",

@@ -1,6 +1,6 @@
-# Contributing to FREE Agent
+# Contributing to CodeCraft
 
-Thank you for your interest in contributing to FREE Agent! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to CodeCraft! This document provides guidelines and instructions for contributing.
 
 ## Code of Conduct
 

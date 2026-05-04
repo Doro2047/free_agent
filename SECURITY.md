@@ -9,7 +9,7 @@ Security Policy
 
 ## Reporting a Vulnerability
 
-If you discover a security vulnerability within FREE Agent, please create an issue
+If you discover a security vulnerability within CodeCraft, please create an issue
 with the label "security" or contact the maintainers directly.
 
 Please include as much information as possible:

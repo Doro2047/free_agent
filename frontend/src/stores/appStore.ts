@@ -28,7 +28,7 @@ export const useAppStore = create<AppState>()(
       setActiveTask: (taskId) => set({ activeTaskId: taskId }),
     }),
     {
-      name: 'free-agent-app',
+      name: 'codecraft-app',
       partialize: (state) => ({
         theme: state.theme,
         sidebarCollapsed: state.sidebarCollapsed,
