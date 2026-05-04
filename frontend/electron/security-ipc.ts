@@ -1,4 +1,4 @@
-import { ipcMain, IpcMainInvokeEvent } from 'electron';
+import { ipcMain, IpcMainInvokeEvent, safeStorage } from 'electron';
 import electronLog from 'electron-log';
 
 const log = electronLog;
@@ -64,6 +64,21 @@ const IPC_WHITELIST: IPCConfig[] = [
     channel: 'agent-mode:set',
     validate: {
       mode: { type: 'string', enum: ['chat', 'code'], required: true },
+    },
+  },
+  {
+    channel: 'secure-storage:is-available',
+  },
+  {
+    channel: 'secure-storage:encrypt',
+    validate: {
+      data: { type: 'string', required: true, min: 1 },
+    },
+  },
+  {
+    channel: 'secure-storage:decrypt',
+    validate: {
+      encryptedData: { type: 'string', required: true, min: 1 },
     },
   },
 ];
@@ -213,4 +228,38 @@ export function validateChannel(channel: string): boolean {
 
 export function getIPCConfig(channel: string): IPCConfig | undefined {
   return IPC_WHITELIST.find((c) => c.channel === channel);
+}
+
+export function registerSecureStorageIPC(): void {
+  createSecureHandler('secure-storage:is-available', () => {
+    return safeStorage.isEncryptionAvailable();
+  });
+
+  createSecureHandler('secure-storage:encrypt', (_event, data: string) => {
+    try {
+      if (!safeStorage.isEncryptionAvailable()) {
+        throw new Error('加密功能不可用');
+      }
+      const encrypted = safeStorage.encryptString(data);
+      return encrypted.toString('base64');
+    } catch (error) {
+      log.error('[SecureStorage] 加密失败:', error);
+      throw new Error('加密失败');
+    }
+  });
+
+  createSecureHandler('secure-storage:decrypt', (_event, encryptedData: string) => {
+    try {
+      if (!safeStorage.isEncryptionAvailable()) {
+        throw new Error('加密功能不可用');
+      }
+      const buffer = Buffer.from(encryptedData, 'base64');
+      return safeStorage.decryptString(buffer);
+    } catch (error) {
+      log.error('[SecureStorage] 解密失败:', error);
+      throw new Error('解密失败');
+    }
+  });
+
+  log.info('[SecureStorage] 安全存储 IPC 注册完成');
 }

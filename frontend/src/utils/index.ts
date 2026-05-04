@@ -2,13 +2,6 @@ export {
   debounce,
   throttle,
   memoize,
-  once,
-  retry,
-  sleep,
-  defer,
-  LazyLoad,
-  createEventEmitter,
-  createBatchProcessor,
 } from './performance';
 
 export {
@@ -27,9 +20,9 @@ export {
   getErrorMessage,
   getErrorCode,
   formatErrorForUser,
-  errorTracker,
   withErrorHandling,
   asyncWithErrorHandling,
+  ErrorTracker,
 } from './errors';
 
 export {
@@ -58,7 +51,6 @@ export {
   useAsync,
   useHover,
   useClickOutside,
-  useKeyboardShortcut,
   useEventListener,
   useIsomorphicLayoutEffect,
   useCancellable,
@@ -176,12 +168,15 @@ export {
   logAsync,
 } from './logger';
 
-export {
+export type {
   IpcClient,
   IpcError,
   IpcTimeoutError,
   IpcChannelError,
   IpcMain,
+} from './ipc';
+
+export {
   ipcClient,
   ipcMain,
   createIpcClient,
@@ -195,7 +190,6 @@ export {
 export {
   KeyboardShortcutRegistry,
   globalShortcutRegistry,
-  useKeyboardShortcut,
   useKeyboardShortcuts,
   useShortcutManager,
   formatShortcut,
@@ -204,8 +198,6 @@ export {
 } from './keyboard';
 
 export {
-  createSchema,
-  ValidationSchema,
   string,
   number,
   boolean,
@@ -230,7 +222,6 @@ export {
 
 export {
   MetricsCollector,
-  ErrorTracker,
   PerformanceMonitor,
   metricsCollector,
   errorTracker,
@@ -246,7 +237,7 @@ export {
   CustomEvent,
 } from './metrics';
 
-export {
+export type {
   DeepPartial,
   DeepRequired,
   DeepReadonly,
@@ -291,7 +282,9 @@ export {
   Leaves,
   TypeGuard,
   Schema,
-  createSchema,
+} from '../types/extensions';
+
+export {
   stringSchema,
   numberSchema,
   booleanSchema,

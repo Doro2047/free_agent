@@ -21,9 +21,15 @@ export default defineConfig({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          editor: ['react-syntax-highlighter'],
+          editor: ['@monaco-editor/react', 'monaco-editor'],
         },
       },
     },
+  },
+  optimizeDeps: {
+    include: ['monaco-editor'],
+  },
+  worker: {
+    format: 'es',
   },
 });

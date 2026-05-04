@@ -1,4 +1,5 @@
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { AppRouter } from './router';
 import { I18nProvider } from './i18n';
 import { ThemeProvider } from './theme';
 import { Toaster } from 'sonner';

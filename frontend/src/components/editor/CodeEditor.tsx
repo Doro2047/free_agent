@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useEffect, useState } from 'react';
 import Editor, { Monaco, OnMount } from '@monaco-editor/react';
 import { useFileStore } from '@/stores/fileStore';
 import { useAppStore } from '@/stores/appStore';
@@ -8,6 +8,7 @@ import { getLanguageFromPath, getFileNameFromPath } from '@/utils/helpers';
 export function CodeEditor() {
   const { activeFilePath, openFiles, updateFileContent, saveFile } = useFileStore();
   const theme = useAppStore((s) => s.theme);
+  const [isEditorReady, setIsEditorReady] = useState(false);
   const activeFile = openFiles.find((f) => f.path === activeFilePath);
   const content = activeFile?.content || '';
 
@@ -21,7 +22,7 @@ export function CodeEditor() {
     }
   }, [activeFilePath, updateFileContent]);
 
-  const handleEditorMount: OnMount = useCallback((editor: unknown, monaco: Monaco) => {
+  const handleEditorMount: OnMount = useCallback((editor, monaco: Monaco) => {
     monaco.editor.defineTheme('codecraft-dark', {
       base: 'vs-dark',
       inherit: true,
@@ -52,15 +53,131 @@ export function CodeEditor() {
       },
     });
 
-    const editorInstance = editor as { addCommand: (keybinding: number, handler: () => void) => void };
-    editorInstance.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
       if (activeFilePath) {
         saveFile(activeFilePath);
       }
     });
+
+    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyD, () => {
+      const selection = editor.getSelection();
+      if (selection) {
+        const model = editor.getModel();
+        if (model) {
+          const selectedText = model.getValueInRange(selection);
+          const word = model.getWordAtPosition(selection.getStartPosition());
+          if (word) {
+            const matches = model.findMatches(word.word, true, false, false, null, true);
+            let occurrences = 0;
+            const selections: Monaco.IRange[] = [];
+            for (const match of matches) {
+              if (match.range.startLineNumber === selection.startLineNumber) continue;
+              occurrences++;
+              if (occurrences <= 10) {
+                selections.push(match.range);
+              }
+            }
+            if (selections.length > 0) {
+              editor.setSelections(selections);
+            }
+          }
+        }
+      }
+    });
+
+    setIsEditorReady(true);
   }, [activeFilePath, saveFile]);
 
   const monacoTheme = theme === 'dark' ? 'codecraft-dark' : 'codecraft-light';
+
+  const editorOptions = useMemo(() => ({
+    minimap: { enabled: false },
+    fontSize: 14,
+    fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Consolas, monospace",
+    fontLigatures: true,
+    lineNumbers: 'on' as const,
+    lineHeight: 1.6,
+    renderLineHighlight: 'line' as const,
+    scrollBeyondLastLine: false,
+    automaticLayout: true,
+    tabSize: 2,
+    insertSpaces: true,
+    wordWrap: 'on' as const,
+    padding: { top: 8, bottom: 8 },
+    cursorBlinking: 'smooth' as const,
+    cursorSmoothCaretAnimation: 'on' as const,
+    smoothScrolling: true,
+    bracketPairColorization: { enabled: true },
+    guides: {
+      bracketPairs: true,
+      indentation: true,
+    },
+    suggest: {
+      showKeywords: true,
+      showSnippets: true,
+      showClasses: true,
+      showFunctions: true,
+      showVariables: true,
+      showConstants: true,
+      showModules: true,
+      showProperties: true,
+      showEvents: true,
+      showOperators: true,
+      showUnits: true,
+      showValues: true,
+      showEnums: true,
+      showEnumMembers: true,
+      showWords: true,
+      showColors: true,
+      showFiles: true,
+      showReferences: true,
+      showFolders: true,
+      showTypeParameters: true,
+      showSnippets: true,
+    },
+    quickSuggestions: {
+      other: true,
+      comments: false,
+      strings: true,
+    },
+    parameterHints: {
+      enabled: true,
+      cycle: true,
+    },
+    folding: true,
+    foldingHighlight: true,
+    showFoldingControls: 'mouseover' as const,
+    matchBrackets: 'always' as const,
+    autoClosingBrackets: 'always' as const,
+    autoClosingQuotes: 'always' as const,
+    autoIndent: 'full' as const,
+    formatOnPaste: true,
+    formatOnType: false,
+    renderWhitespace: 'selection' as const,
+    contextmenu: true,
+    mouseWheelZoom: true,
+    scrollbar: {
+      verticalScrollbarSize: 8,
+      horizontalScrollbarSize: 8,
+    },
+    inlayHints: {
+      enabled: 'on' as const,
+      padding: true,
+    },
+    hover: {
+      enabled: true,
+      delay: 300,
+    },
+    acceptSuggestionOnEnter: 'on' as const,
+    tabCompletion: 'on' as const,
+    snippetSuggestions: 'top' as const,
+  }), []);
+
+  useEffect(() => {
+    return () => {
+      setIsEditorReady(false);
+    };
+  }, [activeFilePath]);
 
   if (!activeFilePath) {
     return (
@@ -98,54 +215,7 @@ export function CodeEditor() {
               <span className="text-sm">加载编辑器...</span>
             </div>
           }
-          options={{
-            minimap: { enabled: false },
-            fontSize: 14,
-            fontFamily: "'JetBrains Mono', 'Fira Code', 'SF Mono', Monaco, Consolas, monospace",
-            fontLigatures: true,
-            lineNumbers: 'on',
-            lineHeight: 1.6,
-            renderLineHighlight: 'line',
-            scrollBeyondLastLine: false,
-            automaticLayout: true,
-            tabSize: 2,
-            insertSpaces: true,
-            wordWrap: 'on',
-            padding: { top: 8, bottom: 8 },
-            cursorBlinking: 'smooth',
-            cursorSmoothCaretAnimation: 'on',
-            smoothScrolling: true,
-            bracketPairColorization: { enabled: true },
-            guides: {
-              bracketPairs: true,
-              indentation: true,
-            },
-            suggest: {
-              showKeywords: true,
-              showSnippets: true,
-            },
-            quickSuggestions: {
-              other: true,
-              comments: false,
-              strings: true,
-            },
-            folding: true,
-            foldingHighlight: true,
-            showFoldingControls: 'mouseover',
-            matchBrackets: 'always',
-            autoClosingBrackets: 'always',
-            autoClosingQuotes: 'always',
-            autoIndent: 'full',
-            formatOnPaste: true,
-            formatOnType: false,
-            renderWhitespace: 'selection',
-            contextmenu: true,
-            mouseWheelZoom: true,
-            scrollbar: {
-              verticalScrollbarSize: 8,
-              horizontalScrollbarSize: 8,
-            },
-          }}
+          options={editorOptions}
         />
       </div>
     </div>

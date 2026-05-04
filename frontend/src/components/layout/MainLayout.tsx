@@ -1,10 +1,8 @@
-import { Outlet } from 'react-router-dom';
 import { useAppStore } from '@/stores/appStore';
 import { ChatPanel } from '@/components/panels/ChatPanel';
 import { TaskPanel } from '@/components/panels/TaskPanel';
 import { CodeEditor } from '@/components/editor/CodeEditor';
 import { useFileStore } from '@/stores/fileStore';
-import { useState } from 'react';
 
 export function MainLayout() {
   const sidebarCollapsed = useAppStore((s) => s.sidebarCollapsed);

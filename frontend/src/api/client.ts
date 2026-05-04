@@ -150,8 +150,12 @@ class ApiClientError extends Error {
   constructor(message: string, status?: number, data?: ApiErrorData) {
     super(message);
     this.name = 'ApiClientError';
-    this.status = status;
-    this.data = data;
+    if (status !== undefined) {
+      this.status = status;
+    }
+    if (data !== undefined) {
+      this.data = data;
+    }
   }
 }
 

@@ -16,7 +16,7 @@ const router = createBrowserRouter([
       },
       {
         path: 'settings',
-        element: <SettingsPanel />,
+        element: <SettingsPanel onClose={() => window.history.back()} />,
       },
       {
         path: 'tasks',
