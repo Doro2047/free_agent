@@ -1,5 +1,5 @@
-import { useMemo, useCallback, useEffect, useState } from 'react';
-import Editor, { Monaco, OnMount } from '@monaco-editor/react';
+import { useMemo, useCallback, useState } from 'react';
+import Editor, { OnMount } from '@monaco-editor/react';
 import { useFileStore } from '@/stores/fileStore';
 import { useAppStore } from '@/stores/appStore';
 import { Code2, FileText, Loader2 } from 'lucide-react';
@@ -22,7 +22,7 @@ export function CodeEditor() {
     }
   }, [activeFilePath, updateFileContent]);
 
-  const handleEditorMount: OnMount = useCallback((editor, monaco: Monaco) => {
+  const handleEditorMount: OnMount = useCallback((editor, monaco) => {
     monaco.editor.defineTheme('codecraft-dark', {
       base: 'vs-dark',
       inherit: true,
@@ -64,16 +64,13 @@ export function CodeEditor() {
       if (selection) {
         const model = editor.getModel();
         if (model) {
-          const selectedText = model.getValueInRange(selection);
           const word = model.getWordAtPosition(selection.getStartPosition());
           if (word) {
             const matches = model.findMatches(word.word, true, false, false, null, true);
-            let occurrences = 0;
-            const selections: Monaco.IRange[] = [];
+            const selections: Parameters<typeof editor.setSelections>[0] = [];
             for (const match of matches) {
               if (match.range.startLineNumber === selection.startLineNumber) continue;
-              occurrences++;
-              if (occurrences <= 10) {
+              if (selections.length < 10) {
                 selections.push(match.range);
               }
             }
@@ -133,7 +130,6 @@ export function CodeEditor() {
       showReferences: true,
       showFolders: true,
       showTypeParameters: true,
-      showSnippets: true,
     },
     quickSuggestions: {
       other: true,
@@ -172,12 +168,6 @@ export function CodeEditor() {
     tabCompletion: 'on' as const,
     snippetSuggestions: 'top' as const,
   }), []);
-
-  useEffect(() => {
-    return () => {
-      setIsEditorReady(false);
-    };
-  }, [activeFilePath]);
 
   if (!activeFilePath) {
     return (

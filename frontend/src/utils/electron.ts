@@ -85,7 +85,7 @@ export async function getServerStatus(): Promise<{ running: boolean; port: numbe
 }
 
 export async function startLlamaChat(
-  messages: { role: string; content: string }[],
+  messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
   config?: Record<string, unknown>
 ): Promise<string | null> {
   const result = await window.electronAPI?.llama?.chat(messages, config);
@@ -93,7 +93,7 @@ export async function startLlamaChat(
 }
 
 export async function startLlamaStream(
-  messages: { role: string; content: string }[],
+  messages: { role: 'system' | 'user' | 'assistant'; content: string }[],
   config?: Record<string, unknown>
 ): Promise<ReadableStream | null> {
   return window.electronAPI?.llama?.stream(messages, config) ?? null;
@@ -129,8 +129,7 @@ export async function switchModel(name: string): Promise<boolean> {
 }
 
 export function onServerMessage(callback: (message: unknown) => void): () => void {
-  const handler = (_event: unknown, message: unknown) => callback(message);
-  window.electronAPI?.logs?.onLog(handler);
+  window.electronAPI?.logs?.onLog(callback);
   return () => {};
 }
 

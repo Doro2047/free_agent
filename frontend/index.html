@@ -1,13 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#18181b" />
+    <meta name="description" content="CodeCraft - AI 编程助手桌面应用，基于 Electron + React + Rust 构建的高性能架构" />
+    <meta name="keywords" content="AI, 编程助手, CodeCraft, Electron, React, Rust, LLM, GPT, Claude" />
+    <meta name="author" content="CodeCraft Contributors" />
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CodeCraft" />
+    
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16.png" />
+    
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#18181b" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="CodeCraft - AI 编程助手" />
+    <meta property="og:description" content="AI 编程助手桌面应用，基于 Electron + React + Rust 构建的高性能架构" />
+    <meta property="og:image" content="/icons/icon-512.png" />
+    <meta property="og:url" content="https://codecraft.app" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="CodeCraft - AI 编程助手" />
+    <meta name="twitter:description" content="AI 编程助手桌面应用，基于 Electron + React + Rust 构建的高性能架构" />
+    <meta name="twitter:image" content="/icons/icon-512.png" />
+    
     <title>CodeCraft</title>
   </head>
   <body>
+    <noscript>
+      <div style="padding: 20px; text-align: center; font-family: system-ui, sans-serif;">
+        <h1>CodeCraft</h1>
+        <p>请启用 JavaScript 以使用 CodeCraft 应用。</p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then((registration) => {
+            console.log('SW registered:', registration.scope);
+          }).catch((error) => {
+            console.log('SW registration failed:', error);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

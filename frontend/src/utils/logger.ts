@@ -427,7 +427,7 @@ export class Logger {
     return 'unknown';
   }
 
-  private log(level: LogLevel, message: string, context?: Record<string, unknown>, error?: Error): void {
+  public log(level: LogLevel, message: string, context?: Record<string, unknown>, error?: Error): void {
     if (level < this.config.level) return;
 
     const entry = this.createEntry(level, message, context, error);

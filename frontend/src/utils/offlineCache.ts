@@ -267,7 +267,7 @@ export class ServiceWorkerCache {
     this.cache = null;
   }
 
-  async keys(): Promise<Request[]> {
+  async keys(): Promise<readonly Request[]> {
     const cache = await this.open();
     return cache.keys();
   }

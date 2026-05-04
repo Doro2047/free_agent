@@ -194,8 +194,9 @@ export {
   useShortcutManager,
   formatShortcut,
   COMMON_SHORTCUTS,
-  KeyboardShortcut,
 } from './keyboard';
+
+export type { KeyboardShortcut } from './keyboard';
 
 export {
   string,

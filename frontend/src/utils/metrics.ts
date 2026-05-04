@@ -766,10 +766,8 @@ export function measureFID(callback?: (metric: PerformanceMetric) => void): void
   }
 }
 
-export function measureTTFB(callback?: (metric: PerformanceMetric) => void): void {
-  if (typeof window === 'undefined') return {
-    stop: () => {},
-  };
+export function measureTTFB(callback?: (metric: PerformanceMetric) => void): { stop: () => void } {
+  if (typeof window === 'undefined') return { stop: () => {} };
 
   try {
     const observer = new PerformanceObserver((list) => {

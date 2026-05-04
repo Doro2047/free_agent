@@ -172,7 +172,7 @@ export class I18n {
         } else if (format === 'capitalize') {
           value = String(value).charAt(0).toUpperCase() + String(value).slice(1).toLowerCase();
         } else if (format === 'plural') {
-          value = this.getPlural(value as number, options.count);
+          value = this.getPlural(value as number, options);
         } else if (format === 'gender') {
           value = this.getGender(value as 'male' | 'female' | 'other');
         } else if (format === 'number') {

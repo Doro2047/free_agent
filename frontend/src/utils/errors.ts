@@ -153,7 +153,7 @@ export interface ErrorLog {
   context?: Record<string, unknown>;
 }
 
-class ErrorTracker {
+export class ErrorTracker {
   private logs: ErrorLog[] = [];
   private maxLogs = 100;
 
