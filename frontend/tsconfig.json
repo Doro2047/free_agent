@@ -23,8 +23,9 @@
     "types": ["vite/client"]
   },
   "include": [
-    "src/**/*"
+    "src/**/*",
+    "electron/**/*"
   ],
-  "exclude": ["src/stories", "dist", "node_modules"],
+  "exclude": ["src/stories", "src/test", "dist", "dist-electron", "release", "node_modules"],
   "references": [{ "path": "./tsconfig.node.json" }, { "path": "./electron/tsconfig.json" }]
 }
