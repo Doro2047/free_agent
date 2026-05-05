@@ -23,35 +23,8 @@
     "types": ["vite/client"]
   },
   "include": [
-    "src/vite-env.d.ts",
-    "src/App.tsx",
-    "src/main.tsx",
-    "src/router/**/*",
-    "src/components/editor/**/*",
-    "src/components/layout/**/*",
-    "src/components/panels/**/*",
-    "src/components/common/ErrorBoundary.tsx",
-    "src/components/settings/**/*",
-    "src/stores/appStore.ts",
-    "src/stores/chatStore.ts",
-    "src/stores/fileStore.ts",
-    "src/api/**/*",
-    "src/theme/**/*",
-    "src/utils/helpers.ts",
-    "src/utils/cn.ts",
-    "src/utils/performance.ts",
-    "src/utils/storage.ts",
-    "src/utils/errors.ts",
-    "src/utils/hooks.ts",
-    "src/utils/logger.ts",
-    "src/utils/metrics.ts",
-    "src/utils/monacoLanguageServices.ts",
-    "src/utils/offlineCache.ts",
-    "src/utils/secureStorage.ts",
-    "src/utils/electron.ts",
-    "src/i18n/index.tsx",
-    "src/index.css"
+    "src/**/*"
   ],
-  "exclude": ["src/stories", "src/test"],
+  "exclude": ["src/stories", "dist", "node_modules"],
   "references": [{ "path": "./tsconfig.node.json" }, { "path": "./electron/tsconfig.json" }]
 }

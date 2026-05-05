@@ -35,9 +35,10 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
     globals: true,
+    setupFiles: ['./src/test/setup.ts'],
     coverage: {
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'dist/', 'src/stories/', 'e2e/'],
+      exclude: ['node_modules/', 'dist/', 'src/stories/', 'e2e/', 'src/test/'],
     },
   },
 });

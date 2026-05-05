@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockIpcRenderer = {
   invoke: vi.fn(),
@@ -23,10 +23,10 @@ global.localStorage = localStorageMock as unknown as Storage;
 describe('SecureStorage Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
+    mockIpcRenderer.invoke.mockReset();
+    localStorageMock.getItem.mockReset();
+    localStorageMock.setItem.mockReset();
+    localStorageMock.removeItem.mockReset();
   });
 
   describe('isEncryptionAvailable', () => {
