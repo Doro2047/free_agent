@@ -1,4 +1,3 @@
-import { ipcRenderer } from 'electron';
 import { isElectron } from '@/utils/electron';
 
 export interface SecureStorageResult {
@@ -12,9 +11,21 @@ class SecureStorageService {
     return isElectron();
   }
 
+  private async getIpcRenderer() {
+    if (!this.isAvailable) return null;
+    try {
+      const { ipcRenderer } = await import('electron');
+      return ipcRenderer;
+    } catch {
+      return null;
+    }
+  }
+
   async isEncryptionAvailable(): Promise<boolean> {
     if (!this.isAvailable) return false;
     try {
+      const ipcRenderer = await this.getIpcRenderer();
+      if (!ipcRenderer) return false;
       return await ipcRenderer.invoke('secure-storage:is-available');
     } catch {
       return false;
@@ -26,6 +37,10 @@ class SecureStorageService {
       return { success: false, error: 'Electron API not available' };
     }
     try {
+      const ipcRenderer = await this.getIpcRenderer();
+      if (!ipcRenderer) {
+        return { success: false, error: 'Electron API not available' };
+      }
       const encrypted = await ipcRenderer.invoke('secure-storage:encrypt', data);
       return { success: true, data: encrypted };
     } catch (error) {
@@ -41,6 +56,10 @@ class SecureStorageService {
       return { success: false, error: 'Electron API not available' };
     }
     try {
+      const ipcRenderer = await this.getIpcRenderer();
+      if (!ipcRenderer) {
+        return { success: false, error: 'Electron API not available' };
+      }
       const decrypted = await ipcRenderer.invoke('secure-storage:decrypt', encryptedData);
       return { success: true, data: decrypted };
     } catch (error) {
