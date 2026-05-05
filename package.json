@@ -6,8 +6,7 @@
   "author": "CodeCraft Contributors",
   "license": "MIT",
   "workspaces": [
-    "frontend",
-    "claw-code/rust"
+    "frontend"
   ],
   "scripts": {
     "dev": "cd frontend && npm run dev",
@@ -22,5 +21,9 @@
     "test": "cd frontend && npm run test",
     "typecheck": "cd frontend && npm run typecheck",
     "clean": "cd frontend && rm -rf dist dist-electron release"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.3.0",
+    "@commitlint/config-conventional": "^19.2.2"
   }
 }
