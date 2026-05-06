@@ -1,9 +1,9 @@
 {
-  "name": "codecraft",
+  "name": "rustcraft",
   "version": "0.1.0",
   "private": true,
-  "description": "CodeCraft - AI Programming Assistant Desktop Application",
-  "author": "CodeCraft Contributors",
+  "description": "RustCraft - 高性能AI编程助手桌面应用 | Electron + React + Rust + MCP协议",
+  "author": "RustCraft Contributors",
   "license": "MIT",
   "workspaces": [
     "frontend"
